@@ -27,7 +27,7 @@ This repo is my attempt at creating a small Pokémon battle simulator that focus
 
 - **Frontend:** React  
 - **Backend:** Python + FastAPI  
-- **Database:** SQLite  
+- **Database:** PostgreSQL  
 - **API:** REST (JSON)  
 
 ---
