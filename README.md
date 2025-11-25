@@ -1,53 +1,86 @@
-Build your own Pokémon Battle Simulator (Gen 4)
+# 🟦 PokeSim – Build Your Own Gen 4 Pokémon Battle Simulator
 
-This repo is my attempt at creating a small Pokémon battle simulator that focuses on Gen 4 Pokémon only (Diamond / Pearl / Platinum) at the beginning. The idea is to keep it simple first, then slowly expand it as I learn more.
+![React](https://img.shields.io/badge/Frontend-React-blue?logo=react&logoColor=white)
+![FastAPI](https://img.shields.io/badge/Backend-FastAPI-teal?logo=fastapi&logoColor=white)
+![Python](https://img.shields.io/badge/Language-Python-yellow?logo=python&logoColor=white)
+![SQLite](https://img.shields.io/badge/Database-SQLite-lightgrey?logo=sqlite&logoColor=white)
+![Status](https://img.shields.io/badge/Status-Early%20WIP-orange)
 
-What this project is:
+---
 
-- A Gen 4-only Pokémon battle simulator (for now)
-- A practice project to learn frontend ↔ backend ↔ database
-- A place to experiment with team building, damage logic, and simple battle flows
+This repo is my attempt at creating a small Pokémon battle simulator that focuses on **Gen 4 Pokémon only** (Diamond / Pearl / Platinum) at the beginning.  
+The idea is to keep it simple first, then slowly expand it as I learn more.
 
-Tech stack
+**“What I cannot create, I do not understand.” — Richard Feynman**
 
-- Frontend: React
-- Backend: Python (FastAPI)
-- Database: SQLite
-- API style: REST (JSON)
+It’s a fun way for me to learn full-stack development with React + Python.
 
-Core ideas / features
+---
 
-- Access to a Pokémon database for Gen 4:
-  - Pokémon names
-  - Types
-  - Base stats
-  - Moves
-  - Abilities
-- Team creation:
-  - Build a team of up to 6 Pokémon
-  - Pick moves and abilities for each member
-- Simple battle simulator:
-  - Battle other “trainer” teams or wild / rogue Pokémon
-  - Turn-based damage calculations with a simple formula
-  - No battle animations at the start, just text + numbers (HP changes, move messages)
+## 🟩 What This Project Is
 
-Planned flow
+- A Gen 4–only Pokémon battle simulator (for now)  
+- A learning project for frontend ↔ backend ↔ database  
+- A place to experiment with:
+  - Team building  
+  - Damage calculation  
+  - Basic turn-based battle logic  
 
-- Get Pokémon data from the backend via API
-- Use React to build:
-  - Pokémon list view
-  - Team builder page
-  - Basic battle screen
-- Send battle actions (like “use move”) to the backend and return damage + messages
+---
 
-Current status
+## 🟨 Tech Stack
 
-- Setting up the project structure (frontend + backend folders)
-- Starting with basic endpoints and a small Gen 4 Pokémon dataset
-- Slowly wiring React components to call the FastAPI backend
+- **Frontend:** React  
+- **Backend:** Python + FastAPI  
+- **Database:** SQLite  
+- **API:** REST (JSON)  
 
-Future ideas
+---
 
-- Expand beyond Gen 4 later
-- Add more detailed move effects, abilities, and status conditions
-- Add simple animations or better UI once the core logic feels solid
+## 🟦 Core Features
+
+- **Pokémon Database (Gen 4):**
+  - Names  
+  - Types  
+  - Base stats  
+  - Moves  
+  - Abilities  
+
+- **Team Builder:**
+  - Create a team of up to 6 Pokémon  
+  - Select moves and abilities  
+
+- **Battle Simulator:**
+  - Fight trainer teams or wild “rogue” Pokémon  
+  - Simple damage formula  
+  - Text-based battle results  
+  - No animations yet  
+
+---
+
+## 🟪 Planned Flow
+
+- Fetch Pokémon data from FastAPI  
+- Display using React (Pokémon list, team builder, battle page)  
+- Send battle actions to backend:
+  - “Use move”
+  - Backend calculates damage
+  - Return results to frontend  
+
+---
+
+## 🟫 Current Status
+
+- Project folders set up  
+- React frontend created  
+- FastAPI backend planned  
+- Starting with small Gen 4 Pokémon dataset  
+- Connecting frontend → backend next  
+
+---
+
+## 🟧 Future Ideas
+
+- Expand to more generations  
+- Add more move effects, status conditions  
+- Add animations or polished UI later  
