@@ -1,4 +1,4 @@
-# <img src="assets/SVG/445.svg" width="22" /> PokeSim – Gen 4 Pokémon Battle Simulator
+# <img src="assets/SVG/445.svg" width="70" /> PokeSim – Gen 4 Pokémon Battle Simulator
 
 ![React](https://img.shields.io/badge/Frontend-React-blue?logo=react&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/Backend-FastAPI-teal?logo=fastapi&logoColor=white)
@@ -12,7 +12,7 @@ This repo is my attempt at creating a small Pokémon battle simulator that focus
 
 ---
 
-## <img src="assets/SVG/392.svg" width="50" /> What This Project Is
+## <img src="assets/SVG/392.svg" width="70" /> What This Project Is
 
 - A Gen 4–only Pokémon battle simulator (for now)  
 - A learning project for frontend ↔ backend ↔ database  
@@ -23,7 +23,7 @@ This repo is my attempt at creating a small Pokémon battle simulator that focus
 
 ---
 
-## <img src="assets/SVG/389.svg" width="20" /> Tech Stack
+## <img src="assets/SVG/389.svg" width="70" /> Tech Stack
 
 - **Frontend:** React  
 - **Backend:** Python + FastAPI  
@@ -32,7 +32,7 @@ This repo is my attempt at creating a small Pokémon battle simulator that focus
 
 ---
 
-## <img src="assets/SVG/395.svg" width="20" /> Core Features
+## <img src="assets/SVG/395.svg" width="70" /> Core Features
 
 - **Pokémon Database (Gen 4):**
   - Names  
@@ -53,7 +53,7 @@ This repo is my attempt at creating a small Pokémon battle simulator that focus
 
 ---
 
-## <img src="assets/SVG/466.svg" width="20" /> Planned Flow
+## <img src="assets/SVG/466.svg" width="70" /> Planned Flow
 
 - Fetch Pokémon data from FastAPI  
 - Display using React (Pokémon list, team builder, battle page)  
@@ -64,7 +64,7 @@ This repo is my attempt at creating a small Pokémon battle simulator that focus
 
 ---
 
-## <img src="assets/SVG/398.svg" width="20" /> Current Status
+## <img src="assets/SVG/398.svg" width="70" /> Current Status
 
 - Project folders set up  
 - React frontend created  
@@ -74,7 +74,7 @@ This repo is my attempt at creating a small Pokémon battle simulator that focus
 
 ---
 
-## <img src="assets/SVG/493.svg" width="20" /> Future Ideas
+## <img src="assets/SVG/493.svg" width="70" /> Future Ideas
 
 - Expand to more generations  
 - Add more move effects, status conditions  
