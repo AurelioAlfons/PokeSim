@@ -1,4 +1,4 @@
-# 🟦 PokeSim – Build Your Own Gen 4 Pokémon Battle Simulator
+# <img src="assets/SVG/389.svg" width="22" /> PokeSim – Build Your Own Gen 4 Pokémon Battle Simulator
 
 ![React](https://img.shields.io/badge/Frontend-React-blue?logo=react&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/Backend-FastAPI-teal?logo=fastapi&logoColor=white)
@@ -8,16 +8,11 @@
 
 ---
 
-This repo is my attempt at creating a small Pokémon battle simulator that focuses on **Gen 4 Pokémon only** (Diamond / Pearl / Platinum) at the beginning.  
-The idea is to keep it simple first, then slowly expand it as I learn more.
-
-**“What I cannot create, I do not understand.” — Richard Feynman**
-
-It’s a fun way for me to learn full-stack development with React + Python.
+This repo is my attempt at creating a small Pokémon battle simulator that focuses on **Gen 4 Pokémon only** at the beginning.  
 
 ---
 
-## 🟩 What This Project Is
+## <img src="assets/SVG/389.svg" width="20" /> What This Project Is
 
 - A Gen 4–only Pokémon battle simulator (for now)  
 - A learning project for frontend ↔ backend ↔ database  
@@ -28,7 +23,7 @@ It’s a fun way for me to learn full-stack development with React + Python.
 
 ---
 
-## 🟨 Tech Stack
+## <img src="assets/SVG/389.svg" width="20" /> Tech Stack
 
 - **Frontend:** React  
 - **Backend:** Python + FastAPI  
@@ -37,7 +32,7 @@ It’s a fun way for me to learn full-stack development with React + Python.
 
 ---
 
-## 🟦 Core Features
+## <img src="assets/SVG/389.svg" width="20" /> Core Features
 
 - **Pokémon Database (Gen 4):**
   - Names  
@@ -58,7 +53,7 @@ It’s a fun way for me to learn full-stack development with React + Python.
 
 ---
 
-## 🟪 Planned Flow
+## <img src="assets/SVG/389.svg" width="20" /> Planned Flow
 
 - Fetch Pokémon data from FastAPI  
 - Display using React (Pokémon list, team builder, battle page)  
@@ -69,7 +64,7 @@ It’s a fun way for me to learn full-stack development with React + Python.
 
 ---
 
-## 🟫 Current Status
+## <img src="assets/SVG/389.svg" width="20" /> Current Status
 
 - Project folders set up  
 - React frontend created  
@@ -79,7 +74,7 @@ It’s a fun way for me to learn full-stack development with React + Python.
 
 ---
 
-## 🟧 Future Ideas
+## <img src="assets/SVG/389.svg" width="20" /> Future Ideas
 
 - Expand to more generations  
 - Add more move effects, status conditions  
