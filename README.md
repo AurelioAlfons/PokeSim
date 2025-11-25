@@ -12,7 +12,7 @@ This repo is my attempt at creating a small Pokémon battle simulator that focus
 
 ---
 
-## <img src="assets/SVG/392.svg" width="20" /> What This Project Is
+## <img src="assets/SVG/392.svg" width="50" /> What This Project Is
 
 - A Gen 4–only Pokémon battle simulator (for now)  
 - A learning project for frontend ↔ backend ↔ database  
@@ -79,4 +79,3 @@ This repo is my attempt at creating a small Pokémon battle simulator that focus
 - Expand to more generations  
 - Add more move effects, status conditions  
 - Add animations or polished UI later  
->>>>>>> 67184eaef86406c2d10acf20501d2919e5aaf1fd
