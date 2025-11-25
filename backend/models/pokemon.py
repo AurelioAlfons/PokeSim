@@ -1,0 +1,1 @@
+## Define pokemon model and stats
