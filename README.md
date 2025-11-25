@@ -1,4 +1,4 @@
-# <img src="assets/SVG/389.svg" width="22" /> PokeSim – Build Your Own Gen 4 Pokémon Battle Simulator
+# <img src="assets/SVG/389.svg" width="22" /> PokeSim – Gen 4 Pokémon Battle Simulator
 
 ![React](https://img.shields.io/badge/Frontend-React-blue?logo=react&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/Backend-FastAPI-teal?logo=fastapi&logoColor=white)
