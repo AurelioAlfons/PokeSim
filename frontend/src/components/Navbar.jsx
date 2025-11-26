@@ -33,9 +33,9 @@ export default function Navbar() {
         <img
           src="/assets/SVG/387.svg"
           alt="logo"
-          style={{ width: 26, height: 26 }}
+          style={{ width: 60, height: 60 }}
         />
-        <span style={{ fontWeight: 700, fontSize: 18 }}>Poké Simulator</span>
+        <span style={{ fontWeight: 700, fontSize: 18, color: "#ffffffff" }}>Poké Simulator</span>
       </div>
 
       {/* CENTER — actual pill-shaped navbar */}
