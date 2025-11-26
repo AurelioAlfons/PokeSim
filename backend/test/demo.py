@@ -1,76 +1,46 @@
-import random
+# backend/test/demo.py
+
 import os
 
-## Colors
+from backend.models.pokemon import Pokemon
+from backend.services.battle_service import take_turn, enemy_choose_move
+
+# Colors
 GREEN = "\033[92m"
 RED = "\033[91m"
 RESET = "\033[0m"
 BOLD = "\033[1m"
 
-## Fixed inner width for all boxes
+# Fixed inner width for all boxes
 BOX_WIDTH = 34
 
-## Clear terminal upon running
+
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-## Define Pokemon attributes
-class Pokemon:
-    def __init__(self, name, level, pokemon_type, base_hp, base_attack, base_defense, base_speed, moves):
-        self.name = name
-        self.level = level
-        self.pokemon_type = pokemon_type.lower()
 
-        # ----- Simple level-based scaling -----
-        self.max_hp = base_hp + level * 3
-        self.hp = self.max_hp
-        self.attack = base_attack + level * 1
-        self.defense = base_defense + level * 1
-        self.speed = base_speed + level * 1
-        # --------------------------------------
+def format_action(result: dict) -> str:
+    """Turn the engine result into a printable string for CLI."""
+    if result["action"] == "heal":
+        if result["healed"] == 0:
+            return (
+                f"{result['user']} used {result['move_name']}! → HP is already full.\n"
+                f"{result['user']} HP: {result['user_hp']}/{result['user_max_hp']}\n"
+            )
+        return (
+            f"{result['user']} used {result['move_name']}! → healed {result['healed']} HP\n"
+            f"{result['user']} HP: {result['user_hp']}/{result['user_max_hp']}\n"
+        )
 
-        # moves: (name, power, type, category)
-        self.moves = moves
+    # damage
+    stab_text = " (STAB!)" if result.get("stab") else ""
+    return (
+        f"{result['user']} used {result['move_name']}!{stab_text} → {result['damage']} dmg\n"
+        f"{result['target']} HP: {result['target_hp']}/{result['target_max_hp']}\n"
+    )
 
-    def is_fainted(self):
-        return self.hp <= 0
 
-## Damage calculation function
-def damage_calc(attacker, defender, power, move_type):
-    lvl = (2 * attacker.level) / 5 + 2
-    base = (lvl * attacker.attack * power) / defender.defense
-    damage = int(base / 50) + 2
-
-    ## STAB (1.5x), If move type matches attacker's type
-    if attacker.pokemon_type == move_type.lower():
-        damage = int(damage * 1.5)
-
-    return damage
-
-## Execute a turn
-def take_turn(user, target, move):
-    name, power, move_type, category = move
-
-    # Healing move, If category is "heal"
-    if category == "heal":
-        old_hp = user.hp
-        user.hp = min(user.hp + power, user.max_hp)
-        healed = user.hp - old_hp
-        print(f"{user.name} used {name}! → healed {healed} HP")
-        print(f"{user.name} HP: {user.hp}/{user.max_hp}\n")
-        return
-
-    # Damage move
-    dmg = damage_calc(user, target, power, move_type)
-    target.hp = max(target.hp - dmg, 0)
-
-    stab_text = " (STAB!)" if user.pokemon_type == move_type.lower() else ""
-
-    print(f"{user.name} used {name}!{stab_text} → {dmg} dmg")
-    print(f"{target.name} HP: {target.hp}/{target.max_hp}\n")
-
-## Player move selection
-def choose_move(pokemon):
+def choose_move(pokemon: Pokemon):
     print(f"{RED}┌{'─' * BOX_WIDTH}┐{RESET}")
     title = f"Choose a move for {pokemon.name}"
     print(f"{RED}│{title.center(BOX_WIDTH)}│{RESET}")
@@ -90,26 +60,18 @@ def choose_move(pokemon):
 
     choice = input("Enter move number (or anything else to quit): ")
 
-    # If player enters non-number → end battle
     if not choice.isdigit():
         return "END"
 
-    # Convert to int and validate range
     choice = int(choice)
     if 1 <= choice <= len(pokemon.moves):
         return pokemon.moves[choice - 1]
 
-    # If number out of range → end battle
     return "END"
 
 
-def enemy_choose_move(enemy):
-    return random.choice(enemy.moves)
-
-
-def battle(player, enemy):
+def battle(player: Pokemon, enemy: Pokemon):
     print("=== Battle Start ===\n")
-
     turn = 1
 
     while True:
@@ -117,22 +79,20 @@ def battle(player, enemy):
 
         # HP BOX (GREEN)
         print(f"{GREEN}┌{'─' * BOX_WIDTH}┐{RESET}")
-
-        line1 = f"{player.name:<10} HP: {player.hp:>3}/{player.max_hp:<3}"
-        line2 = f"{enemy.name:<10} HP: {enemy.hp:>3}/{enemy.max_hp:<3}"
-
+        line1 = f"Lv {player.level} | {player.name:<10} HP: {player.hp:>3}/{player.max_hp:<3}"
+        line2 = f"Lv {enemy.level}  | {enemy.name:<10} HP: {enemy.hp:>3}/{enemy.max_hp:<3}"
         print(f"{GREEN}│{line1.ljust(BOX_WIDTH)}│{RESET}")
         print(f"{GREEN}│{line2.ljust(BOX_WIDTH)}│{RESET}")
         print(f"{GREEN}└{'─' * BOX_WIDTH}┘{RESET}\n")
 
         # PLAYER TURN
         move = choose_move(player)
-
         if move == "END":
             print("You ended the battle early.")
             break
 
-        take_turn(player, enemy, move)
+        result = take_turn(player, enemy, move)
+        print(format_action(result))
 
         if enemy.is_fainted():
             print(f"{enemy.name} fainted! {player.name} wins!")
@@ -140,7 +100,8 @@ def battle(player, enemy):
 
         # ENEMY TURN
         enemy_move = enemy_choose_move(enemy)
-        take_turn(enemy, player, enemy_move)
+        enemy_result = take_turn(enemy, player, enemy_move)
+        print(format_action(enemy_result))
 
         if player.is_fainted():
             print(f"{player.name} fainted! {enemy.name} wins!")
@@ -149,13 +110,11 @@ def battle(player, enemy):
         turn += 1
 
 
-# -----------------------------------------
-# Example Pokémon
-# -----------------------------------------
+# ---- Dummy Pokémon for the demo ----
 
 chimchar = Pokemon(
     name="Chimchar",
-    level=7,
+    level=16,
     pokemon_type="fire",
     base_hp=15,
     base_attack=9,
@@ -182,6 +141,6 @@ bidoof = Pokemon(
 )
 
 
-if __name__ == "__main__": 
+if __name__ == "__main__":
     clear_screen()
     battle(chimchar, bidoof)
