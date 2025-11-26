@@ -8,16 +8,25 @@ from backend.services.battle_service import take_turn, enemy_choose_move
 # Colors
 GREEN = "\033[92m"
 RED = "\033[91m"
+BLUE = "\033[38;2;80;150;255m"  
 RESET = "\033[0m"
 BOLD = "\033[1m"
 
 # Fixed inner width for all boxes
-BOX_WIDTH = 34
+BOX_WIDTH = 40
 
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
+
+def blue_box(text: str):
+    """Wrap any text inside a blue box."""
+    lines = text.strip().split("\n")
+    print(f"{BLUE}┌{'─' * BOX_WIDTH}┐{RESET}")
+    for line in lines:
+        print(f"{BLUE}│{line.ljust(BOX_WIDTH)}│{RESET}")
+    print(f"{BLUE}└{'─' * BOX_WIDTH}┘{RESET}")
 
 def format_action(result: dict) -> str:
     """Turn the engine result into a printable string for CLI."""
@@ -58,7 +67,7 @@ def choose_move(pokemon: Pokemon):
 
     print(f"{RED}└{'─' * BOX_WIDTH}┘{RESET}")
 
-    choice = input("Enter move number (or anything else to quit): ")
+    choice = input("\nEnter move number (or anything else to quit): ")
 
     if not choice.isdigit():
         return "END"
@@ -71,11 +80,11 @@ def choose_move(pokemon: Pokemon):
 
 
 def battle(player: Pokemon, enemy: Pokemon):
-    print("=== Battle Start ===\n")
+    print("=== Battle Start ===")
     turn = 1
 
     while True:
-        print(f"{BOLD}--- Turn {turn} ---{RESET}\n")
+        print(f"\n{BOLD}--- Turn {turn} ---{RESET}\n")
 
         # HP BOX (GREEN)
         print(f"{GREEN}┌{'─' * BOX_WIDTH}┐{RESET}")
@@ -83,7 +92,7 @@ def battle(player: Pokemon, enemy: Pokemon):
         line2 = f"Lv {enemy.level}  | {enemy.name:<10} HP: {enemy.hp:>3}/{enemy.max_hp:<3}"
         print(f"{GREEN}│{line1.ljust(BOX_WIDTH)}│{RESET}")
         print(f"{GREEN}│{line2.ljust(BOX_WIDTH)}│{RESET}")
-        print(f"{GREEN}└{'─' * BOX_WIDTH}┘{RESET}\n")
+        print(f"{GREEN}└{'─' * BOX_WIDTH}┘{RESET}")
 
         # PLAYER TURN
         move = choose_move(player)
@@ -92,7 +101,7 @@ def battle(player: Pokemon, enemy: Pokemon):
             break
 
         result = take_turn(player, enemy, move)
-        print(format_action(result))
+        blue_box(format_action(result))
 
         if enemy.is_fainted():
             print(f"{enemy.name} fainted! {player.name} wins!")
@@ -101,7 +110,7 @@ def battle(player: Pokemon, enemy: Pokemon):
         # ENEMY TURN
         enemy_move = enemy_choose_move(enemy)
         enemy_result = take_turn(enemy, player, enemy_move)
-        print(format_action(enemy_result))
+        blue_box(format_action(enemy_result))
 
         if player.is_fainted():
             print(f"{player.name} fainted! {enemy.name} wins!")
