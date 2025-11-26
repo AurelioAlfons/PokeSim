@@ -11,17 +11,11 @@
 #   - enemy_choose_move()
 #   - Pokemon class
 #
-# Think of this file as the "middle man":
-#   React  <--->  battle_router  <--->  battle_service + Pokemon objects
-#
-# Whatever happens in the battle (HP loss, moves used, winner),
-# this file returns the results back to React in JSON format.
-
+# React  <--->  battle_router  <--->  battle_service + Pokemon objects
 
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-# Import your actual battle logic functions + Pokemon class
 from backend.services.battle_service import take_turn, enemy_choose_move
 from backend.models.pokemon import Pokemon
 
@@ -30,8 +24,7 @@ router = APIRouter()
 # -----------------------------
 # TEMPORARY BATTLE STATE
 # -----------------------------
-# We store the current player/enemy Pokemon here for testing.
-# Later this will be replaced with a proper system (sessions or database).
+# Later this will be replaced by sessions / DB.
 current_battle: dict | None = None
 
 
@@ -40,32 +33,43 @@ def create_default_pokemons():
     Creates two Pokemon for testing.
     Called every time a NEW battle starts.
     """
+
+    # --- Player: Chimchar (id 390) ---
     player = Pokemon(
+        pokedex_id=390,
         name="Chimchar",
         level=10,
-        pokemon_type="fire",
-        base_hp=39,
-        base_attack=52,
-        base_defense=43,
-        base_speed=65,
+        types=["fire"],
+        base_stats={
+            "hp": 44,
+            "atk": 58,
+            "def": 44,
+            "spd": 61,
+        },
         moves=[
-            ("Scratch", 40, "normal", "damage"),
-            ("Ember", 40, "fire", "damage"),
+            {"name": "Scratch", "power": 40, "type": "normal", "category": "damage"},
+            {"name": "Ember", "power": 40, "type": "fire", "category": "damage"},
         ],
+        ability="Blaze",
     )
 
+    # --- Enemy: Bidoof (id 399) ---
     enemy = Pokemon(
+        pokedex_id=399,
         name="Bidoof",
         level=8,
-        pokemon_type="normal",
-        base_hp=59,
-        base_attack=45,
-        base_defense=40,
-        base_speed=31,
+        types=["normal"],
+        base_stats={
+            "hp": 59,
+            "atk": 45,
+            "def": 40,
+            "spd": 31,
+        },
         moves=[
-            ("Tackle", 40, "normal", "damage"),
-            ("Rest", 0, "normal", "heal"),
+            {"name": "Tackle", "power": 40, "type": "normal", "category": "damage"},
+            {"name": "Rest", "power": 0, "type": "normal", "category": "heal"},
         ],
+        ability="Simple",
     )
 
     return player, enemy
@@ -77,34 +81,32 @@ def pokemon_public_view(p: Pokemon) -> dict:
     that React can read easily.
     """
     return {
+        "id": p.id,
         "name": p.name,
         "level": p.level,
-        "type": p.pokemon_type,
+        "types": p.types,
         "hp": p.hp,
         "max_hp": p.max_hp,
+        "sprite": p.sprite,  # /assets/SVG/{id}.svg
         "moves": [
             {
                 "index": i,
-                "name": m[0],
-                "power": m[1],
-                "type": m[2],
-                "category": m[3],
+                "name": m["name"],
+                "power": m["power"],
+                "type": m["type"],
+                "category": m["category"],
             }
             for i, m in enumerate(p.moves)
         ],
     }
 
 
-# This is the data shape React must send when using a move
 class TurnRequest(BaseModel):
     move_index: int  # which move button the user clicked
 
 
 @router.get("/ping")
 def ping():
-    """
-    Quick test to check if the battle API is alive.
-    """
     return {"status": "ok", "message": "Battle API is working"}
 
 
@@ -117,7 +119,6 @@ def start_battle():
     global current_battle
     player, enemy = create_default_pokemons()
 
-    # Save them into the temporary state
     current_battle = {"player": player, "enemy": enemy}
 
     return {
@@ -135,7 +136,7 @@ def do_turn(req: TurnRequest):
     """
     global current_battle
 
-    # If player didn't start a battle yet, auto-create one
+    # Auto-create a battle if none exists
     if current_battle is None:
         player, enemy = create_default_pokemons()
         current_battle = {"player": player, "enemy": enemy}
@@ -152,7 +153,6 @@ def do_turn(req: TurnRequest):
         move_index=req.move_index,
     )
 
-    # If enemy fainted first, battle ends instantly
     if enemy.hp <= 0:
         return {
             "player_action": result_player,
