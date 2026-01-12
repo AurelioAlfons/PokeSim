@@ -14,7 +14,7 @@ RESET = "\033[0m"
 BOLD = "\033[1m"
 
 # Fixed inner width for all boxes
-BOX_WIDTH = 40
+BOX_WIDTH = 60
 
 
 def clear_screen():
@@ -84,7 +84,7 @@ def choose_move(pokemon: Pokemon):
 
 
 # ----------------------------
-# Rogue helpers (dummy)
+# Rogue helpers
 # ----------------------------
 def next_alive(team):
     for p in team:
@@ -103,7 +103,6 @@ def lowest_alive_level(team):
 
 
 def make_wild(level: int) -> Pokemon:
-    # dummy wild pool
     pool = [
         ("Bidoof", 399, ["normal"], {"hp": 59, "atk": 45, "def": 40, "spd": 31},
          [{"name": "Tackle", "power": 40, "type": "normal", "category": "damage"},
@@ -129,11 +128,34 @@ def make_wild(level: int) -> Pokemon:
 
 def green_hp_box(player: Pokemon, enemy: Pokemon):
     print(f"{GREEN}┌{'─' * BOX_WIDTH}┐{RESET}")
-    line1 = f"Lv {player.level} | {player.name:<10} HP: {player.hp:>3}/{player.max_hp:<3}"
+    line1 = (
+        f"Lv {player.level} | {player.name:<10} "
+        f"HP: {player.hp:>3}/{player.max_hp:<3} "
+        f"| EXP: {player.exp}/{player.exp_to_next_level}"
+    )
     line2 = f"Lv {enemy.level}  | {enemy.name:<10} HP: {enemy.hp:>3}/{enemy.max_hp:<3}"
     print(f"{GREEN}│{line1.ljust(BOX_WIDTH)}│{RESET}")
     print(f"{GREEN}│{line2.ljust(BOX_WIDTH)}│{RESET}")
     print(f"{GREEN}└{'─' * BOX_WIDTH}┘{RESET}")
+
+
+def award_exp_cli(team, active: Pokemon, wild: Pokemon):
+    base_exp = 10 + (wild.level * 2)
+    active_mult = 1.5
+
+    print(f"\n{BOLD}✨ EXP GAINED:{RESET}")
+    for p in team:
+        if p.hp <= 0:
+            continue
+
+        exp_gain = int(base_exp * active_mult) if p is active else base_exp
+        before_level = p.level
+        leveled = p.gain_exp(exp_gain)
+
+        if leveled:
+            print(f"  - {p.name} +{exp_gain} EXP → Lv {before_level} → Lv {p.level} 🎉")
+        else:
+            print(f"  - {p.name} +{exp_gain} EXP")
 
 
 # ----------------------------
@@ -184,7 +206,6 @@ def rogue_run(team):
 
         active = next_alive(team)
 
-        # wild level rule: lowest team level - 2, plus a ramp
         base_level = max(1, lowest_alive_level(team) - 2)
         ramp = wave // 3
         wild_level = base_level + ramp
@@ -205,25 +226,23 @@ def rogue_run(team):
             wave += 1
             print(f"{GREEN}✅ Win! Total wins: {wins}{RESET}")
 
-            # tiny heal between fights (15%)
+            award_exp_cli(team, active, wild)
+
             for p in team:
                 if p.hp > 0:
                     heal = max(1, int(p.max_hp * 0.15))
                     p.hp = min(p.max_hp, p.hp + heal)
 
         elif outcome == "player_fainted":
-            # don't change wave; next alive continues the run
             if team_wiped(team):
                 print(f"\n💀 RUN OVER. Wins: {wins}")
                 break
             else:
                 nxt = next_alive(team)
                 print(f"{BOLD}➡️  Go! {nxt.name}!{RESET}")
-                # continue loop (same wave will spawn a NEW wild next loop)
-                # If you want SAME wild to remain, we can change that later.
 
 
-# ---- Dummy Pokémon for the demo team ----
+# ---- Demo team ----
 chimchar = Pokemon(
     pokedex_id=390,
     name="Chimchar",
@@ -249,6 +268,5 @@ bidoof = Pokemon(
 )
 
 if __name__ == "__main__":
-    # team can be 1-6 mons
     team = [chimchar, bidoof]
     rogue_run(team)
