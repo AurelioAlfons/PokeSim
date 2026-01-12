@@ -8,7 +8,7 @@ from backend.services.battle_service import take_turn, enemy_choose_move
 # Colors
 GREEN = "\033[92m"
 RED = "\033[91m"
-BLUE = "\033[38;2;80;150;255m"  
+BLUE = "\033[38;2;80;150;255m"
 RESET = "\033[0m"
 BOLD = "\033[1m"
 
@@ -17,7 +17,7 @@ BOX_WIDTH = 40
 
 
 def clear_screen():
-    os.system('cls' if os.name == 'nt' else 'clear')
+    os.system("cls" if os.name == "nt" else "clear")
 
 
 def blue_box(text: str):
@@ -27,6 +27,7 @@ def blue_box(text: str):
     for line in lines:
         print(f"{BLUE}│{line.ljust(BOX_WIDTH)}│{RESET}")
     print(f"{BLUE}└{'─' * BOX_WIDTH}┘{RESET}")
+
 
 def format_action(result: dict) -> str:
     """Turn the engine result into a printable string for CLI."""
@@ -56,7 +57,11 @@ def choose_move(pokemon: Pokemon):
     print(f"{RED}├{'─' * BOX_WIDTH}┤{RESET}")
 
     for i, m in enumerate(pokemon.moves, start=1):
-        name, power, move_type, category = m
+        # moves are dicts now
+        name = m["name"]
+        power = m["power"]
+        move_type = m["type"]
+        category = m["category"]
 
         if category == "damage":
             row = f"{i}. {name:<10} | {move_type:<7} | {power:<3}"
@@ -74,7 +79,7 @@ def choose_move(pokemon: Pokemon):
 
     choice = int(choice)
     if 1 <= choice <= len(pokemon.moves):
-        return pokemon.moves[choice - 1]
+        return pokemon.moves[choice - 1]  # returns move dict
 
     return "END"
 
@@ -119,36 +124,31 @@ def battle(player: Pokemon, enemy: Pokemon):
         turn += 1
 
 
-# ---- Dummy Pokémon for the demo ----
+# ---- Dummy Pokémon for the demo (UPDATED MODEL) ----
 
 chimchar = Pokemon(
+    pokedex_id=390,
     name="Chimchar",
     level=16,
-    pokemon_type="fire",
-    base_hp=15,
-    base_attack=9,
-    base_defense=6,
-    base_speed=10,
+    types=["fire"],
+    base_stats={"hp": 44, "atk": 58, "def": 44, "spd": 61},
     moves=[
-        ("Scratch", 40, "normal", "damage"),
-        ("Ember", 40, "fire", "damage"),
+        {"name": "Scratch", "power": 40, "type": "normal", "category": "damage"},
+        {"name": "Ember", "power": 40, "type": "fire", "category": "damage"},
     ],
 )
 
 bidoof = Pokemon(
+    pokedex_id=399,
     name="Bidoof",
     level=5,
-    pokemon_type="normal",
-    base_hp=18,
-    base_attack=8,
-    base_defense=8,
-    base_speed=5,
+    types=["normal"],
+    base_stats={"hp": 59, "atk": 45, "def": 40, "spd": 31},
     moves=[
-        ("Tackle", 40, "normal", "damage"),
-        ("Rest", 5, "normal", "heal"),
+        {"name": "Tackle", "power": 40, "type": "normal", "category": "damage"},
+        {"name": "Rest", "power": 5, "type": "normal", "category": "heal"},
     ],
 )
-
 
 if __name__ == "__main__":
     clear_screen()

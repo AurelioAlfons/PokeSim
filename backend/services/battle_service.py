@@ -7,27 +7,60 @@
 import random
 from backend.models.pokemon import Pokemon
 
+
+def _normalize_move(move):
+    """
+    Supports BOTH formats:
+    - dict: {"name": "...", "power": 40, "type": "fire", "category": "damage"}
+    - tuple/list: ("Ember", 40, "fire", "damage")
+
+    Returns: (name, power:int, move_type:str, category:str)
+    """
+    # New format (dict)
+    if isinstance(move, dict):
+        name = move.get("name", "Unknown")
+        power = int(move.get("power", 0))
+        move_type = str(move.get("type", "normal")).lower()
+        category = str(move.get("category", "damage")).lower()
+        return name, power, move_type, category
+
+    # Old format (tuple/list)
+    if isinstance(move, (tuple, list)) and len(move) == 4:
+        name, power, move_type, category = move
+        return str(name), int(power), str(move_type).lower(), str(category).lower()
+
+    raise TypeError(f"Unsupported move format: {move}")
+
+
 # Basic damage calculation with STAB
 def damage_calc(attacker: Pokemon, defender: Pokemon, power: int, move_type: str):
     """Basic damage calc with STAB. Returns (damage, stab_bool)."""
     lvl = (2 * attacker.level) / 5 + 2
-    base = (lvl * attacker.attack * power) / defender.defense
+
+    # avoid divide-by-zero just in case
+    defense = max(1, defender.defense)
+
+    base = (lvl * attacker.attack * power) / defense
     damage = int(base / 50) + 2
 
-    stab = attacker.pokemon_type == move_type.lower()
+    # UPDATED: attacker has .types list now (not .pokemon_type)
+    stab = move_type in attacker.types
     if stab:
         damage = int(damage * 1.5)
 
     # always at least 1 damage
     return max(damage, 1), stab
 
+
 # Execute a turn
-def take_turn(attacker: Pokemon, defender: Pokemon, move: tuple):
+def take_turn(attacker: Pokemon, defender: Pokemon, move):
     """
     Execute a move and return a result dict.
-    move = (name, power, move_type, category)
+    Accepts:
+    - dict move
+    - tuple move
     """
-    name, power, move_type, category = move
+    name, power, move_type, category = _normalize_move(move)
 
     # Healing move
     if category == "heal":
@@ -58,6 +91,7 @@ def take_turn(attacker: Pokemon, defender: Pokemon, move: tuple):
         "target_hp": defender.hp,
         "target_max_hp": defender.max_hp,
     }
+
 
 # Simple enemy AI to choose a move randomly
 def enemy_choose_move(enemy: Pokemon):
