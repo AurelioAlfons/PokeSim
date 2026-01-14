@@ -1,42 +1,97 @@
 // src/pages/Home.jsx
-import React from "react";
+import React, { useState } from "react";
+import TeamHeader from "../components/TeamHeader";
 
 export default function Home() {
+  const [description, setDescription] = useState("");
+
   return (
     <div
       style={{
         marginTop: 40,
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
+        padding: "0 20px",
       }}
     >
+      {/* Top header */}
+      <TeamHeader
+        description={description}
+        onDescriptionChange={setDescription}
+        onCancel={() => setDescription("")}
+        onSave={() => console.log("Save team:", description)}
+      />
+
+      {/* Divider */}
       <div
         style={{
-          background: "rgba(255, 255, 255, 0.25)",     // stronger white
-          backdropFilter: "blur(18px) saturate(150%)", // MUCH clearer glass
-          WebkitBackdropFilter: "blur(18px) saturate(150%)",
-          padding: "40px 60px",
-          borderRadius: 20,
-          border: "1px solid rgba(255,255,255,0.45)", // stronger border
-          color: "white",
-          fontSize: 26,
-          fontWeight: 600,
-          textAlign: "center",
-          width: "90%",
-          maxWidth: "10000px",
-          height: "500px",
-          maxHeight: "800px",
+          marginTop: 20,
+          borderBottom: "3px solid black",
+        }}
+      />
 
-          // adds separation from background
-          boxShadow: "0 8px 30px rgba(0,0,0,0.2)",
+      {/* Main content */}
+      <div
+        style={{
+          marginTop: 30,
+          display: "flex",
+          gap: 40,
+          alignItems: "flex-start",
         }}
       >
-        Welcome to Poké Simulator
-        <br />
-        <span style={{ fontSize: 18, opacity: 0.9 }}>
-          Ad Astra
-        </span>
+        {/* Left: Add Pokémon area */}
+        <div
+          style={{
+            flex: 1,
+            maxWidth: 520,
+            border: "2px dashed #cfcfcf",
+            borderRadius: 12,
+            height: 220,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#999",
+            fontWeight: 600,
+          }}
+        >
+          + Add Pokémon
+        </div>
+
+        {/* Right: Team stats */}
+        <div
+          style={{
+            width: 360,
+            border: "2px solid black",
+            borderRadius: 12,
+            padding: 20,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 22,
+              fontWeight: 800,
+              color: "#e53935",
+              marginBottom: 12,
+            }}
+          >
+            Team Stats
+          </div>
+
+          <div style={{ marginBottom: 12 }}>Members: 0 / 6</div>
+
+          <div
+            style={{
+              background: "#eef5ff",
+              border: "1px solid #c6dbff",
+              borderRadius: 6,
+              padding: 12,
+              fontSize: 14,
+            }}
+          >
+            <strong>Tip:</strong>
+            <br />
+            A balanced team needs both Physical and Special attackers, plus
+            defensive pivots!
+          </div>
+        </div>
       </div>
     </div>
   );

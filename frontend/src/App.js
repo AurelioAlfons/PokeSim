@@ -11,6 +11,11 @@ function App() {
   const yellow = "#f7e733";
   const split = "50%";
 
+  // App padding (keep as numbers so we can reuse them cleanly)
+  const padTop = 20;
+  const padX = 40;
+  const padBottom = 40;
+
   return (
     <div
       style={{
@@ -22,11 +27,16 @@ function App() {
         "--bg-yellow": yellow,
         "--bg-split": split,
 
+        // shared padding vars (IMPORTANT for divider math)
+        "--app-pad-top": `${padTop}px`,
+        "--app-pad-x": `${padX}px`,
+        "--app-pad-bottom": `${padBottom}px`,
+
         background:
           "linear-gradient(var(--bg-angle), var(--bg-dark) var(--bg-split), var(--bg-yellow) var(--bg-split))",
         backgroundAttachment: "fixed",
 
-        padding: "20px 40px 40px",
+        padding: `${padTop}px ${padX}px ${padBottom}px`,
       }}
     >
       <Navbar />

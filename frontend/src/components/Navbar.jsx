@@ -18,16 +18,14 @@ export default function Navbar() {
       if (!dividerRef.current) return;
 
       const rect = dividerRef.current.getBoundingClientRect();
-      const APP_TOP_PADDING = -10; // matches App.js padding top
+      const APP_TOP_PADDING = -10;
       const y = rect.top - APP_TOP_PADDING;
 
       const W = window.innerWidth;
       const H = window.innerHeight;
 
-      // matches App.js: 135deg, 50/50
       const x = (W + H) / 2 - y;
       const pct = Math.max(0, Math.min(100, (x / W) * 100));
-
       setSplitX(`${pct}%`);
     };
 
@@ -40,6 +38,26 @@ export default function Navbar() {
       window.removeEventListener("scroll", updateSplit);
     };
   }, []);
+
+  // ---- hover invert helpers ----
+  const invertHoverOn = (e) => {
+    const el = e.currentTarget;
+    const bg = el.style.background;
+    const color = el.style.color;
+    el.style.background = color;
+    el.style.color = bg;
+  };
+
+  const invertHoverOff = (e, active) => {
+    const el = e.currentTarget;
+    if (active) {
+      el.style.background = "#f7e733";
+      el.style.color = "#111";
+    } else {
+      el.style.background = "#111";
+      el.style.color = "#f7e733";
+    }
+  };
 
   const styles = {
     bar: {
@@ -90,8 +108,7 @@ export default function Navbar() {
       fontWeight: 800,
       fontSize: 20,
       cursor: "pointer",
-      transition: "opacity 0.15s ease",
-      boxShadow: "none",
+      transition: "all 0.15s ease",
       outline: "none",
     }),
 
@@ -111,7 +128,7 @@ export default function Navbar() {
       fontWeight: 800,
       fontSize: 20,
       cursor: "pointer",
-      transition: "opacity 0.15s ease",
+      transition: "all 0.15s ease",
     },
 
     divider: {
@@ -121,8 +138,6 @@ export default function Navbar() {
       transform: "translateX(-50%)",
       height: "2px",
       marginTop: 10,
-
-      // STRICT yellow / black divider
       background: `linear-gradient(
         90deg,
         #f7e733 ${splitX},
@@ -150,9 +165,6 @@ export default function Navbar() {
     </svg>
   );
 
-  const hoverOn = (e) => (e.currentTarget.style.opacity = 0.85);
-  const hoverOff = (e) => (e.currentTarget.style.opacity = 1);
-
   return (
     <div style={styles.bar}>
       <div style={styles.inner}>
@@ -167,8 +179,8 @@ export default function Navbar() {
           <button
             style={styles.tab(isBuilder)}
             onClick={() => navigate("/")}
-            onMouseEnter={hoverOn}
-            onMouseLeave={hoverOff}
+            onMouseEnter={invertHoverOn}
+            onMouseLeave={(e) => invertHoverOff(e, isBuilder)}
           >
             <span style={styles.iconBox}>
               <TabIcon type="builder" />
@@ -179,8 +191,8 @@ export default function Navbar() {
           <button
             style={styles.tab(isBattle)}
             onClick={() => navigate("/challenge")}
-            onMouseEnter={hoverOn}
-            onMouseLeave={hoverOff}
+            onMouseEnter={invertHoverOn}
+            onMouseLeave={(e) => invertHoverOff(e, isBattle)}
           >
             <span style={styles.iconBox}>
               <TabIcon type="battle" />
@@ -193,8 +205,11 @@ export default function Navbar() {
         <button
           style={styles.loginBtn}
           onClick={() => navigate("/login")}
-          onMouseEnter={hoverOn}
-          onMouseLeave={hoverOff}
+          onMouseEnter={invertHoverOn}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "#f7e733";
+            e.currentTarget.style.color = "#111";
+          }}
         >
           Login
         </button>
