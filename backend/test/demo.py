@@ -19,7 +19,7 @@ def build_demo_team():
     bidoof = Pokemon(
         pokedex_id=399,
         name="Bidoof",
-        level=5,
+        level=6,
         types=["normal"],
         base_stats={"hp": 59, "atk": 45, "def": 40, "spd": 31},
         moves=[
