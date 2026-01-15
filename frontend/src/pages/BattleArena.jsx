@@ -1,8 +1,42 @@
 // src/pages/BattleArena.jsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 export default function BattleArena() {
-  const [log, setLog] = useState(["A wild Bidoof appeared!", "Go! Chimchar!"]);
+  const [log, setLog] = useState(["Loading battle..."]);
+  const [player, setPlayer] = useState(null);
+  const [enemy, setEnemy] = useState(null);
+
+  useEffect(() => {
+    const start = async () => {
+      try {
+        const res = await fetch("http://127.0.0.1:5000/battle/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (!res.ok) throw new Error("Battle start failed");
+
+        const data = await res.json();
+
+        setPlayer(data.player);
+        setEnemy(data.enemy);
+        setLog(data.log || []);
+      } catch (err) {
+        setLog([
+          "Could not connect to backend.",
+          "Make sure FastAPI is running on http://127.0.0.1:5000",
+        ]);
+      }
+    };
+
+    start();
+  }, []);
+
+  const hpPct = (p) => {
+    if (!p) return "0%";
+    const pct = (p.hp / p.max_hp) * 100;
+    return `${Math.max(0, Math.min(100, pct))}%`;
+  };
 
   return (
     <div
@@ -37,11 +71,14 @@ export default function BattleArena() {
               border: "2px solid rgba(0,0,0,0.85)",
               borderRadius: 10,
               padding: "10px 12px",
-              width: 210,
+              width: 240,
               fontWeight: 900,
             }}
           >
-            <div style={{ fontSize: 16 }}>Bidoof Lv.5</div>
+            <div style={{ fontSize: 16 }}>
+              {enemy ? `${enemy.name} Lv.${enemy.level}` : "Enemy..."}
+            </div>
+
             <div
               style={{
                 marginTop: 8,
@@ -51,7 +88,13 @@ export default function BattleArena() {
                 overflow: "hidden",
               }}
             >
-              <div style={{ width: "90%", height: "100%", background: "#e44848" }} />
+              <div
+                style={{
+                  width: hpPct(enemy),
+                  height: "100%",
+                  background: "#e44848",
+                }}
+              />
             </div>
           </div>
 
@@ -68,15 +111,19 @@ export default function BattleArena() {
               opacity: 0.98,
             }}
           >
-            <img
-              src="/assets/SVG/399.svg"
-              alt="Bidoof"
-              width={190}
-              style={{
-                imageRendering: "pixelated",
-                transform: "scaleX(-1)", // face player
-              }}
-            />
+            {enemy ? (
+              <img
+                src={enemy.sprite}
+                alt={enemy.name}
+                width={190}
+                style={{
+                  imageRendering: "pixelated",
+                  transform: "scaleX(-1)",
+                }}
+              />
+            ) : (
+              <div style={{ fontWeight: 900 }}>(Loading...)</div>
+            )}
           </div>
 
           {/* Player HUD */}
@@ -89,12 +136,15 @@ export default function BattleArena() {
               border: "2px solid rgba(0,0,0,0.85)",
               borderRadius: 10,
               padding: "10px 12px",
-              width: 220,
+              width: 240,
               fontWeight: 900,
               textAlign: "right",
             }}
           >
-            <div style={{ fontSize: 16 }}>Chimchar Lv.5</div>
+            <div style={{ fontSize: 16 }}>
+              {player ? `${player.name} Lv.${player.level}` : "Player..."}
+            </div>
+
             <div
               style={{
                 marginTop: 8,
@@ -104,9 +154,18 @@ export default function BattleArena() {
                 overflow: "hidden",
               }}
             >
-              <div style={{ width: "100%", height: "100%", background: "#25c05a" }} />
+              <div
+                style={{
+                  width: hpPct(player),
+                  height: "100%",
+                  background: "#25c05a",
+                }}
+              />
             </div>
-            <div style={{ marginTop: 6, fontSize: 14 }}>20/20</div>
+
+            <div style={{ marginTop: 6, fontSize: 14 }}>
+              {player ? `${player.hp}/${player.max_hp}` : ""}
+            </div>
           </div>
 
           {/* Player sprite */}
@@ -122,14 +181,16 @@ export default function BattleArena() {
               opacity: 0.98,
             }}
           >
-            <img
-              src="/assets/SVG/390.svg"
-              alt="Chimchar"
-              width={190}
-              style={{
-                imageRendering: "pixelated",
-              }}
-            />
+            {player ? (
+              <img
+                src={player.sprite}
+                alt={player.name}
+                width={190}
+                style={{ imageRendering: "pixelated" }}
+              />
+            ) : (
+              <div style={{ fontWeight: 900 }}>(Loading...)</div>
+            )}
           </div>
         </div>
 
@@ -156,33 +217,36 @@ export default function BattleArena() {
             }}
           >
             {log.map((l, i) => (
-              <div key={i} style={{ marginBottom: 6, opacity: i === 0 ? 1 : 0.85 }}>
+              <div
+                key={i}
+                style={{ marginBottom: 6, opacity: i === 0 ? 1 : 0.85 }}
+              >
                 {l}
               </div>
             ))}
           </div>
 
-          {/* Menu buttons */}
+          {/* Menu buttons (still placeholder actions) */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <MenuBtn
               label="FIGHT"
               bg="#e44848"
-              onClick={() => setLog((p) => ["Chimchar used Scratch!", ...p])}
+              onClick={() => setLog((p) => ["(Next) Open move menu", ...p])}
             />
             <MenuBtn
               label="POKEMON"
               bg="#25c05a"
-              onClick={() => setLog((p) => ["Choose a Pokémon.", ...p])}
+              onClick={() => setLog((p) => ["(Next) Show team list", ...p])}
             />
             <MenuBtn
               label="BAG"
               bg="#e1b200"
-              onClick={() => setLog((p) => ["Opened the bag.", ...p])}
+              onClick={() => setLog((p) => ["(Next) Bag items", ...p])}
             />
             <MenuBtn
               label="RUN"
               bg="#3a7ff0"
-              onClick={() => setLog((p) => ["Got away safely!", ...p])}
+              onClick={() => setLog((p) => ["(Next) Run attempt", ...p])}
             />
           </div>
         </div>
