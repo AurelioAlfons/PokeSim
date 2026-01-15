@@ -2,7 +2,7 @@
 import React from "react";
 
 export default function TeamHeader({
-  teamName = "New Team",
+  teamName = "",
   onTeamNameChange = () => {},
   description = "",
   onDescriptionChange = () => {},
@@ -14,8 +14,14 @@ export default function TeamHeader({
       {/* LEFT: two equal-width inputs */}
       <div style={styles.left}>
         <input
-          value={teamName}
+          value={teamName || ""}
+          placeholder="New Team"
           onChange={(e) => onTeamNameChange(e.target.value)}
+          onBlur={() => {
+            if (!teamName.trim()) {
+              onTeamNameChange("");
+            }
+          }}
           style={styles.teamNameInput}
         />
 

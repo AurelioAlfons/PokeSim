@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import TeamHeader from "../components/TeamHeader";
 
 export default function Home() {
+  const [teamName, setTeamName] = useState("");      // ✅ add this
   const [description, setDescription] = useState("");
 
   return (
@@ -14,10 +15,15 @@ export default function Home() {
     >
       {/* Top header */}
       <TeamHeader
+        teamName={teamName}                          // ✅ add this
+        onTeamNameChange={setTeamName}               // ✅ add this
         description={description}
         onDescriptionChange={setDescription}
-        onCancel={() => setDescription("")}
-        onSave={() => console.log("Save team:", description)}
+        onCancel={() => {
+          setTeamName("");                           // ✅ reset name too
+          setDescription("");
+        }}
+        onSave={() => console.log("Save team:", { teamName, description })} // ✅ include name
       />
 
       {/* Divider */}
