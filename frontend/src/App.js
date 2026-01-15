@@ -4,6 +4,7 @@ import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Challenge from "./pages/Challenge";
+import BattleArena from "./pages/BattleArena";
 
 function App() {
   const angle = "135deg";
@@ -44,6 +45,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/challenge" element={<Challenge />} />
+        <Route path="/battle" element={<BattleArena />} />
       </Routes>
     </div>
   );
