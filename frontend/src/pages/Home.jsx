@@ -1,36 +1,86 @@
 // src/pages/Home.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import TeamHeader from "../components/TeamHeader";
 
 export default function Home() {
-  const [teamName, setTeamName] = useState("");      // ✅ add this
+  // ✅ divider logic
+  const dividerRef = useRef(null);
+  const [splitX, setSplitX] = useState("50%");
+
+  useEffect(() => {
+    const updateSplit = () => {
+      if (!dividerRef.current) return;
+
+      const rect = dividerRef.current.getBoundingClientRect();
+
+      // y position of divider in the viewport
+      const APP_TOP_PADDING = -15;
+      const y = rect.top - APP_TOP_PADDING;
+
+      const W = window.innerWidth;
+      const H = window.innerHeight;
+
+      // where the diagonal boundary is (in viewport coordinates)
+      const boundaryX = (W + H) / 2 - y;
+
+      // convert boundaryX into divider-local coordinates
+      const localX = boundaryX - rect.left;
+
+      // turn it into a % of the divider's own width
+      const pct = Math.max(0, Math.min(100, (localX / rect.width) * 100));
+
+      setSplitX(`${pct}%`);
+    };
+
+    updateSplit();
+    window.addEventListener("resize", updateSplit);
+    window.addEventListener("scroll", updateSplit, { passive: true });
+
+    return () => {
+      window.removeEventListener("resize", updateSplit);
+      window.removeEventListener("scroll", updateSplit);
+    };
+  }, []);
+
+  // ✅ header state
+  const [teamName, setTeamName] = useState("");
   const [description, setDescription] = useState("");
 
   return (
     <div
       style={{
-        marginTop: 40,
+        marginTop: 25,
         padding: "0 20px",
       }}
     >
       {/* Top header */}
       <TeamHeader
-        teamName={teamName}                          // ✅ add this
-        onTeamNameChange={setTeamName}               // ✅ add this
+        teamName={teamName}
+        onTeamNameChange={setTeamName}
         description={description}
         onDescriptionChange={setDescription}
         onCancel={() => {
-          setTeamName("");                           // ✅ reset name too
+          setTeamName("");
           setDescription("");
         }}
-        onSave={() => console.log("Save team:", { teamName, description })} // ✅ include name
+        onSave={() => console.log("Save team:", { teamName, description })}
       />
 
-      {/* Divider */}
+      {/* Adaptive Divider */}
       <div
+        ref={dividerRef}
         style={{
           marginTop: 20,
-          borderBottom: "3px solid black",
+          height: 3,
+          width: "100%",
+          // position: "relative",
+          // left: "50%",
+          // transform: "translateX(-50%)",
+          background: `linear-gradient(
+            90deg,
+            #f7e733 ${splitX},
+            #111 ${splitX}
+          )`,
         }}
       />
 
