@@ -124,7 +124,7 @@ export default function Home() {
             style={{
               fontSize: 22,
               fontWeight: 800,
-              color: "#e53935",
+              color: "#ff2d2d",
               marginBottom: 12,
             }}
           >

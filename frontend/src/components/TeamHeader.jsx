@@ -1,6 +1,28 @@
 // src/components/TeamHeader.jsx
 import React from "react";
 
+/* ---------- Hover helpers ---------- */
+const hoverOnSave = (e) => {
+  e.currentTarget.style.background = "#fff";
+  e.currentTarget.style.color = "#ff2d2d";
+};
+
+const hoverOffSave = (e) => {
+  e.currentTarget.style.background = "#ff2d2d";
+  e.currentTarget.style.color = "#000";
+};
+
+const hoverOnCancel = (e) => {
+  e.currentTarget.style.background = "#ff2d2d";
+  e.currentTarget.style.color = "#fff";
+};
+
+const hoverOffCancel = (e) => {
+  e.currentTarget.style.background = "#fff";
+  e.currentTarget.style.color = "#000";
+};
+
+/* ---------- Component ---------- */
 export default function TeamHeader({
   teamName = "",
   onTeamNameChange = () => {},
@@ -11,16 +33,14 @@ export default function TeamHeader({
 }) {
   return (
     <div style={styles.wrap}>
-      {/* LEFT: two equal-width inputs */}
+      {/* LEFT */}
       <div style={styles.left}>
         <input
           value={teamName || ""}
           placeholder="New Team"
           onChange={(e) => onTeamNameChange(e.target.value)}
           onBlur={() => {
-            if (!teamName.trim()) {
-              onTeamNameChange("");
-            }
+            if (!teamName.trim()) onTeamNameChange("");
           }}
           style={styles.teamNameInput}
         />
@@ -33,23 +53,38 @@ export default function TeamHeader({
         />
       </div>
 
-      {/* RIGHT: buttons */}
+      {/* RIGHT */}
       <div style={styles.right}>
-        <button onClick={onCancel} style={styles.cancelBtn}>
-          Cancel
-        </button>
-
-        <button onClick={onSave} style={styles.saveBtn}>
+        {/* SAVE */}
+        <button
+          onClick={onSave}
+          style={styles.saveBtn}
+          onMouseEnter={hoverOnSave}
+          onMouseLeave={hoverOffSave}
+        >
           <span style={styles.saveIcon} aria-hidden>
-            💾
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4ZM12 19a3 3 0 1 1 0-6 3 3 0 0 1 0 6ZM6 5h9v4H6V5Z" />
+            </svg>
           </span>
           Save Team
+        </button>
+
+        {/* CANCEL */}
+        <button
+          onClick={onCancel}
+          style={styles.cancelBtn}
+          onMouseEnter={hoverOnCancel}
+          onMouseLeave={hoverOffCancel}
+        >
+          Cancel
         </button>
       </div>
     </div>
   );
 }
 
+/* ---------- Styles ---------- */
 const styles = {
   wrap: {
     display: "flex",
@@ -67,7 +102,6 @@ const styles = {
     gap: 10,
   },
 
-  // SAME WIDTH as description because both are 100%
   teamNameInput: {
     width: "95%",
     height: 42,
@@ -94,37 +128,42 @@ const styles = {
 
   right: {
     display: "flex",
-    alignItems: "center",
-    gap: 12,
-    marginTop: 6,
-  },
-
-  cancelBtn: {
-    height: 38,
-    padding: "0 16px",
-    borderRadius: 8,
-    border: "2px solid #111",
-    background: "#fff",
-    fontWeight: 700,
-    cursor: "pointer",
+    flexDirection: "column",
+    gap: 10,
+    marginTop: 0,
   },
 
   saveBtn: {
-    height: 38,
-    padding: "0 16px",
+    height: 42,
+    width: 140,
     borderRadius: 8,
     border: "2px solid #111",
-    background: "#f3a2a2",
+    background: "#ff2d2d",
+    color: "#000",
     fontWeight: 800,
     cursor: "pointer",
     display: "inline-flex",
     alignItems: "center",
-    gap: 10,
+    justifyContent: "center",
+    gap: 8,
     boxShadow: "3px 3px 0 rgba(0,0,0,0.25)",
+    transition: "background 0.15s ease, color 0.15s ease",
+  },
+
+  cancelBtn: {
+    height: 42,
+    width: 140,
+    borderRadius: 8,
+    border: "2px solid #111",
+    background: "#fff",
+    color: "#000",
+    fontWeight: 700,
+    cursor: "pointer",
+    transition: "background 0.15s ease, color 0.15s ease",
   },
 
   saveIcon: {
-    fontSize: 16,
-    lineHeight: 1,
+    display: "inline-flex",
+    alignItems: "center",
   },
 };
