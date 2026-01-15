@@ -1,5 +1,6 @@
 // src/pages/BattleArena.jsx
 import React, { useEffect, useState } from "react";
+import BattlePanel from "../components/BattlePanel";
 
 export default function BattleArena() {
   const [log, setLog] = useState(["Loading battle..."]);
@@ -17,7 +18,6 @@ export default function BattleArena() {
         if (!res.ok) throw new Error("Battle start failed");
 
         const data = await res.json();
-
         setPlayer(data.player);
         setEnemy(data.enemy);
         setLog(data.log || []);
@@ -54,8 +54,10 @@ export default function BattleArena() {
             height: 580,
             borderRadius: 12,
             border: "4px solid rgba(0,0,0,0.9)",
-            background:
-              "linear-gradient(180deg, rgba(170,210,255,0.9), rgba(200,255,220,0.85))",
+            backgroundImage: "url('/assets/backgrounds/1.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
             position: "relative",
             overflow: "hidden",
             boxShadow: "0 10px 0 rgba(0,0,0,0.85)",
@@ -194,104 +196,15 @@ export default function BattleArena() {
           </div>
         </div>
 
-        {/* Bottom UI */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1.4fr 1fr",
-            gap: 14,
-            marginTop: 16,
-          }}
-        >
-          {/* Log box */}
-          <div
-            style={{
-              height: 180,
-              borderRadius: 12,
-              border: "3px solid rgba(0,0,0,0.85)",
-              background: "rgba(0,0,0,0.85)",
-              color: "#fff",
-              padding: 14,
-              fontWeight: 800,
-              overflow: "auto",
-            }}
-          >
-            {log.map((l, i) => (
-              <div
-                key={i}
-                style={{ marginBottom: 6, opacity: i === 0 ? 1 : 0.85 }}
-              >
-                {l}
-              </div>
-            ))}
-          </div>
-
-          {/* Menu buttons (still placeholder actions) */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <MenuBtn
-              label="FIGHT"
-              bg="#e44848"
-              onClick={() => setLog((p) => ["(Next) Open move menu", ...p])}
-            />
-            <MenuBtn
-              label="POKEMON"
-              bg="#25c05a"
-              onClick={() => setLog((p) => ["(Next) Show team list", ...p])}
-            />
-            <MenuBtn
-              label="BAG"
-              bg="#e1b200"
-              onClick={() => setLog((p) => ["(Next) Bag items", ...p])}
-            />
-            <MenuBtn
-              label="RUN"
-              bg="#3a7ff0"
-              onClick={() => setLog((p) => ["(Next) Run attempt", ...p])}
-            />
-          </div>
-        </div>
+        {/* Bottom Panel (Log + Menu) */}
+        <BattlePanel
+          log={log}
+          onFight={() => setLog((p) => ["(Next) Open move menu", ...p])}
+          onPokemon={() => setLog((p) => ["(Next) Show team list", ...p])}
+          onBag={() => setLog((p) => ["(Next) Bag items", ...p])}
+          onRun={() => setLog((p) => ["(Next) Run attempt", ...p])}
+        />
       </div>
     </div>
-  );
-}
-
-function MenuBtn({ label, bg, onClick }) {
-  const base = {
-    height: 92,
-    borderRadius: 10,
-    border: "3px solid rgba(0,0,0,0.85)",
-    boxShadow: "0 8px 0 rgba(0,0,0,0.85)",
-    color: "#fff",
-    fontWeight: 900,
-    fontSize: 22,
-    letterSpacing: 1,
-    cursor: "pointer",
-    transition: "transform 120ms ease, box-shadow 120ms ease",
-    background: bg,
-  };
-
-  return (
-    <button
-      style={base}
-      onClick={onClick}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = "translateY(-2px)";
-        e.currentTarget.style.boxShadow = "0 10px 0 rgba(0,0,0,0.85)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "translateY(0px)";
-        e.currentTarget.style.boxShadow = "0 8px 0 rgba(0,0,0,0.85)";
-      }}
-      onMouseDown={(e) => {
-        e.currentTarget.style.transform = "translateY(3px)";
-        e.currentTarget.style.boxShadow = "0 4px 0 rgba(0,0,0,0.85)";
-      }}
-      onMouseUp={(e) => {
-        e.currentTarget.style.transform = "translateY(-2px)";
-        e.currentTarget.style.boxShadow = "0 10px 0 rgba(0,0,0,0.85)";
-      }}
-    >
-      {label}
-    </button>
   );
 }
