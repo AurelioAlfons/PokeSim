@@ -16,6 +16,7 @@ Does NOT handle:
 import random
 from dataclasses import dataclass, field
 from typing import List, Tuple
+
 from backend.models.pokemon import Pokemon
 
 
@@ -101,12 +102,15 @@ def enemy_choose_move(enemy: Pokemon):
 
 
 # -----------------------------
-# EXP
+# EXP (ALL Pokémon get same EXP)
 # -----------------------------
-def award_exp_if_supported(winner: Pokemon, loser: Pokemon):
-    gain_exp = getattr(winner, "gain_exp", None)
-    if callable(gain_exp):
-        gain_exp(10 + loser.level * 2)
+def award_exp_all(team: List[Pokemon], loser: Pokemon):
+    exp = 10 + loser.level * 2
+    for p in team:
+        gain_exp = getattr(p, "gain_exp", None)
+        if callable(gain_exp):
+            gain_exp(exp)
+
 
 # -----------------------------
 # Reset / Heal helpers (for Run / restart)
@@ -116,10 +120,13 @@ def reset_team(team: List[Pokemon]) -> None:
     for p in team:
         p.hp = p.max_hp
 
+
 # -----------------------------
 # CLI rogue battle (optional)
+# NOTE: this is separate from API session.
+# If you want team-wide EXP here, pass team in.
 # -----------------------------
-def run_battle(player: Pokemon, enemy: Pokemon) -> str:
+def run_battle(team: List[Pokemon], player: Pokemon, enemy: Pokemon) -> str:
     while player.hp > 0 and enemy.hp > 0:
         player_move = random.choice(player.moves)
         enemy_move = enemy_choose_move(enemy)
@@ -129,7 +136,7 @@ def run_battle(player: Pokemon, enemy: Pokemon) -> str:
         if player_first:
             take_turn(player, enemy, player_move)
             if enemy.hp <= 0:
-                award_exp_if_supported(player, enemy)
+                award_exp_all(team, enemy)
                 return "wild_fainted"
 
             take_turn(enemy, player, enemy_move)
@@ -142,7 +149,7 @@ def run_battle(player: Pokemon, enemy: Pokemon) -> str:
 
             take_turn(player, enemy, player_move)
             if enemy.hp <= 0:
-                award_exp_if_supported(player, enemy)
+                award_exp_all(team, enemy)
                 return "wild_fainted"
 
     return "player_fainted" if player.hp <= 0 else "wild_fainted"
@@ -185,12 +192,12 @@ class BattleSession:
         p = self.player()
         e = self.enemy
 
-        # ❌ fainted Pokémon cannot act
+        # fainted Pokémon cannot act
         if p.hp <= 0:
             self.log.append(f"{p.name} has fainted! Switch Pokémon.")
             return False, "Active Pokémon fainted."
 
-        # ❌ invalid move
+        # invalid move
         if move_index < 0 or move_index >= len(p.moves):
             self.log.append("Invalid move.")
             return False, "Invalid move index."
@@ -204,7 +211,7 @@ class BattleSession:
             self._do_action(p, e, player_move)
             if e.hp <= 0:
                 self.log.append(f"{e.name} fainted!")
-                award_exp_if_supported(p, e)
+                award_exp_all(self.team, e)
                 return True, "Enemy fainted."
 
             self._do_action(e, p, enemy_move)
@@ -220,7 +227,7 @@ class BattleSession:
             self._do_action(p, e, player_move)
             if e.hp <= 0:
                 self.log.append(f"{e.name} fainted!")
-                award_exp_if_supported(p, e)
+                award_exp_all(self.team, e)
                 return True, "Enemy fainted."
 
         return True, "Turn resolved."
