@@ -1,8 +1,14 @@
-# backend/routers/battle_router.py
 from fastapi import APIRouter
 from pydantic import BaseModel
 
 from backend.models.sample_team import SAMPLE_TEAM
+from backend.services.battle_service import BattleSession
+from backend.services.rogue_service import (
+    between_fight_heal,
+    compute_wave_info,
+    team_wiped,
+)
+from backend.services.wild_factory import make_wild
 
 router = APIRouter()
 
@@ -26,107 +32,142 @@ def _poke_to_dict(p):
     }
 
 
-# --- simple in-memory battle state (good for local dev) ---
-BATTLE_STATE = {
-    "active_index": 0,
-    "enemy_index": 1,
-    "started": False,
-}
+# -----------------------------
+# In-memory battle session
+# -----------------------------
+SESSION: BattleSession | None = None
+WAVE: int = 1
 
 
 class SwitchRequest(BaseModel):
     index: int
 
 
+class MoveRequest(BaseModel):
+    index: int
+
+
+def _team_payload():
+    return {
+        "id": SAMPLE_TEAM.id,
+        "name": SAMPLE_TEAM.name,
+        "pokemon": [_poke_to_dict(x) for x in SAMPLE_TEAM.pokemon],
+    }
+
+
+def _ensure_session() -> BattleSession:
+    global SESSION, WAVE
+
+    if SESSION is None:
+        WAVE = 1
+        SESSION = BattleSession(
+            team=SAMPLE_TEAM.pokemon,
+            active_index=0,
+            enemy=make_wild(level=5),
+            log=[],
+        )
+
+        player = SESSION.player()
+        enemy = SESSION.enemy
+        SESSION.log = [
+            f"Wave {WAVE} begins!",
+            f"A wild {enemy.name} appeared!",
+            f"Go! {player.name}!",
+        ]
+
+    return SESSION
+
+
+def _state_response(session: BattleSession, ok=True, message=None):
+    player = session.player()
+    enemy = session.enemy
+
+    payload = {
+        "ok": ok,
+        "active_index": session.active_index,
+        "player": _poke_to_dict(player),
+        "enemy": _poke_to_dict(enemy),
+        "team": _team_payload(),
+        "log": session.log,
+        "wave": WAVE,
+    }
+
+    if message is not None:
+        payload["message"] = message
+
+    return payload
+
+
+# -----------------------------
+# Routes
+# -----------------------------
 @router.post("/start")
 def start_battle():
-    """
-    For now:
-    - team = SAMPLE_TEAM (3 pokemon)
-    - active player = slot 0 (Chimchar)
-    - enemy = slot 1 (Bidoof)
-    """
-    BATTLE_STATE["active_index"] = 0
-    BATTLE_STATE["enemy_index"] = 1
-    BATTLE_STATE["started"] = True
+    global SESSION, WAVE
 
-    player = SAMPLE_TEAM.pokemon[BATTLE_STATE["active_index"]]
-    enemy = SAMPLE_TEAM.pokemon[BATTLE_STATE["enemy_index"]]
+    WAVE = 1
+    SESSION = BattleSession(
+        team=SAMPLE_TEAM.pokemon,
+        active_index=0,
+        enemy=make_wild(level=5),
+        log=[],
+    )
+
+    player = SESSION.player()
+    enemy = SESSION.enemy
 
     return {
-        "team": {
-            "id": SAMPLE_TEAM.id,
-            "name": SAMPLE_TEAM.name,
-            "pokemon": [_poke_to_dict(x) for x in SAMPLE_TEAM.pokemon],
-        },
-        "active_index": BATTLE_STATE["active_index"],
+        "team": _team_payload(),
+        "active_index": SESSION.active_index,
         "player": _poke_to_dict(player),
         "enemy": _poke_to_dict(enemy),
         "log": [
+            f"Wave {WAVE} begins!",
             f"A wild {enemy.name} appeared!",
             f"Go! {player.name}!",
         ],
+        "wave": WAVE,
     }
+
+
+@router.post("/move")
+def use_move(body: MoveRequest):
+    global WAVE
+
+    session = _ensure_session()
+    session.log = []
+
+    ok, msg = session.apply_move(body.index)
+
+    # -----------------------------
+    # Rogue progression
+    # -----------------------------
+    if msg == "Enemy fainted.":
+        # Team wipe check
+        if team_wiped(session.team):
+            session.log.append("💀 Your team has been wiped. Run over.")
+            return _state_response(session, ok=True)
+
+        # Heal team slightly
+        between_fight_heal(session.team)
+
+        # Next wave
+        WAVE += 1
+        info = compute_wave_info(session.team, WAVE)
+
+        # Spawn next wild
+        session.enemy = make_wild(level=info.wild_level)
+
+        session.log.append(f"Wave {WAVE} begins!")
+        session.log.append(f"A wild {session.enemy.name} appeared!")
+
+    return _state_response(session, ok=ok, message=None if ok else msg)
 
 
 @router.post("/switch")
 def switch_pokemon(body: SwitchRequest):
-    """
-    Switch active player pokemon to a team slot.
-    """
-    if not BATTLE_STATE["started"]:
-        # if someone calls switch before start
-        BATTLE_STATE["active_index"] = 0
-        BATTLE_STATE["enemy_index"] = 1
-        BATTLE_STATE["started"] = True
+    session = _ensure_session()
+    session.log = []
 
-    idx = body.index
-
-    if idx < 0 or idx >= len(SAMPLE_TEAM.pokemon):
-        return {
-            "ok": False,
-            "message": "Invalid slot index.",
-            "active_index": BATTLE_STATE["active_index"],
-            "player": _poke_to_dict(SAMPLE_TEAM.pokemon[BATTLE_STATE["active_index"]]),
-            "enemy": _poke_to_dict(SAMPLE_TEAM.pokemon[BATTLE_STATE["enemy_index"]]),
-            "team": {
-                "id": SAMPLE_TEAM.id,
-                "name": SAMPLE_TEAM.name,
-                "pokemon": [_poke_to_dict(x) for x in SAMPLE_TEAM.pokemon],
-            },
-            "log": ["Can't switch: invalid slot."],
-        }
-
-    picked = SAMPLE_TEAM.pokemon[idx]
-    if picked.hp <= 0:
-        return {
-            "ok": False,
-            "message": "That Pokemon has fainted.",
-            "active_index": BATTLE_STATE["active_index"],
-            "player": _poke_to_dict(SAMPLE_TEAM.pokemon[BATTLE_STATE["active_index"]]),
-            "enemy": _poke_to_dict(SAMPLE_TEAM.pokemon[BATTLE_STATE["enemy_index"]]),
-            "team": {
-                "id": SAMPLE_TEAM.id,
-                "name": SAMPLE_TEAM.name,
-                "pokemon": [_poke_to_dict(x) for x in SAMPLE_TEAM.pokemon],
-            },
-            "log": [f"{picked.name} has fainted!"],
-        }
-
-    BATTLE_STATE["active_index"] = idx
-
-    player = SAMPLE_TEAM.pokemon[BATTLE_STATE["active_index"]]
-    enemy = SAMPLE_TEAM.pokemon[BATTLE_STATE["enemy_index"]]
-
-    return {
-        "ok": True,
-        "active_index": BATTLE_STATE["active_index"],
-        "player": _poke_to_dict(player),
-        "enemy": _poke_to_dict(enemy),
-        "team": {
-            "id": SAMPLE_TEAM.id,
-            "name": SAMPLE_TEAM.name,
-            "pokemon": [_poke_to_dict(x) for x in SAMPLE_TEAM.pokemon],
-        },
-        "log": [f"Go! {player.name}!"],
-    }
+    ok, msg = session.apply_switch(body.index)
+    return _state_response(session, ok=ok, message=None if ok else msg)

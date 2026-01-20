@@ -9,6 +9,7 @@ export default function BattleArena() {
   const [team, setTeam] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [panelMode, setPanelMode] = useState("main"); // main | moves | pokemon
+  const [forceSwitch, setForceSwitch] = useState(false); // 🔴 NEW
 
   useEffect(() => {
     const start = async () => {
@@ -26,6 +27,7 @@ export default function BattleArena() {
         setLog(data.log || []);
         setTeam(data.team?.pokemon || []);
         setActiveIndex(data.active_index ?? 0);
+        setForceSwitch(false); // 🔴 NEW
       } catch (err) {
         setLog([
           "Could not connect to backend.",
@@ -56,20 +58,51 @@ export default function BattleArena() {
       if (!res.ok) throw new Error("Switch failed");
       const data = await res.json();
 
-      // update UI from backend truth
       setPlayer(data.player);
       setEnemy(data.enemy);
       setTeam(data.team?.pokemon || []);
       setActiveIndex(data.active_index ?? 0);
 
-      // prepend log lines
       if (data.log?.length) {
         setLog((p) => [...data.log, ...p]);
       }
 
+      setForceSwitch(false); // 🔴 NEW
       setPanelMode("main");
     } catch (e) {
       setLog((p) => ["Could not switch Pokemon (backend not reachable).", ...p]);
+      setPanelMode("main");
+    }
+  };
+
+  const doMove = async (index) => {
+    try {
+      const res = await fetch("http://127.0.0.1:5000/battle/move", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ index }),
+      });
+
+      if (!res.ok) throw new Error("Move failed");
+      const data = await res.json();
+
+      setPlayer(data.player);
+      setEnemy(data.enemy);
+      setTeam(data.team?.pokemon || []);
+      setActiveIndex(data.active_index ?? 0);
+
+      if (data.log?.length) setLog((p) => [...data.log, ...p]);
+
+      // 🔴 FORCE SWITCH if backend says active fainted
+      if (data.message === "Active Pokémon fainted.") {
+        setForceSwitch(true);
+        setPanelMode("pokemon");
+        return;
+      }
+
+      setPanelMode("main");
+    } catch (e) {
+      setLog((p) => ["Could not use move (backend not reachable).", ...p]);
       setPanelMode("main");
     }
   };
@@ -239,16 +272,10 @@ export default function BattleArena() {
           moves={moves}
           team={team}
           activeIndex={activeIndex}
-          onFight={() => setPanelMode("moves")}
+          onFight={() => !forceSwitch && setPanelMode("moves")} // 🔴 LOCKED
           onPokemon={() => setPanelMode("pokemon")}
-          onBack={() => setPanelMode("main")}
-          onPickMove={(i) => {
-            const chosen = moves[i];
-            if (!chosen) return;
-
-            setLog((p) => [`${player?.name || "Pokemon"} used ${chosen.name}!`, ...p]);
-            setPanelMode("main");
-          }}
+          onBack={() => !forceSwitch && setPanelMode("main")} // 🔴 LOCKED
+          onPickMove={(i) => doMove(i)}
           onPickPokemon={(i) => switchTo(i)}
           onBag={() => setLog((p) => ["(Next) Bag items", ...p])}
           onRun={() => setLog((p) => ["(Next) Run attempt", ...p])}

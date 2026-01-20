@@ -1,21 +1,21 @@
-# backend/services/battle_service.py
 """
 Battle logic and mechanics (1v1 only)
 
-✅ What this file should do:
+Handles:
 - Turn order (speed)
 - Damage + healing moves
-- A small battle loop for ONE fight: player_pokemon vs wild_pokemon
-- Return a simple outcome for Rogue mode:
-    "wild_fainted"   -> you won the fight
-    "player_fainted" -> your active fainted
+- STAB
+- One full turn for UI
+- One full fight for Rogue mode
 
-❌ What this file should NOT do:
-- Endless rogue waves (that lives in rogue_service.py)
-- Team switching / run progression
+Does NOT handle:
+- Endless rogue waves
+- Team progression logic
 """
 
 import random
+from dataclasses import dataclass, field
+from typing import List, Tuple
 from backend.models.pokemon import Pokemon
 
 
@@ -30,15 +30,14 @@ def _normalize_move(move):
 
     Returns: (name, power:int, move_type:str, category:str)
     """
-    # New format (dict)
     if isinstance(move, dict):
-        name = move.get("name", "Unknown")
-        power = int(move.get("power", 0))
-        move_type = str(move.get("type", "normal")).lower()
-        category = str(move.get("category", "damage")).lower()
-        return name, power, move_type, category
+        return (
+            move.get("name", "Unknown"),
+            int(move.get("power", 0)),
+            str(move.get("type", "normal")).lower(),
+            str(move.get("category", "damage")).lower(),
+        )
 
-    # Old format (tuple/list)
     if isinstance(move, (tuple, list)) and len(move) == 4:
         name, power, move_type, category = move
         return str(name), int(power), str(move_type).lower(), str(category).lower()
@@ -50,16 +49,13 @@ def _normalize_move(move):
 # Damage
 # -----------------------------
 def damage_calc(attacker: Pokemon, defender: Pokemon, power: int, move_type: str):
-    """Basic damage calc with STAB. Returns (damage, stab_bool)."""
+    """Basic damage calc with STAB."""
     lvl = (2 * attacker.level) / 5 + 2
-
-    # avoid divide-by-zero just in case
     defense = max(1, defender.defense)
 
     base = (lvl * attacker.attack * power) / defense
     damage = int(base / 50) + 2
 
-    # attacker has .types list now
     stab = move_type in attacker.types
     if stab:
         damage = int(damage * 1.5)
@@ -68,30 +64,20 @@ def damage_calc(attacker: Pokemon, defender: Pokemon, power: int, move_type: str
 
 
 # -----------------------------
-# Execute a turn
+# Execute a move
 # -----------------------------
 def take_turn(attacker: Pokemon, defender: Pokemon, move):
-    """
-    Execute a move and return a result dict.
-    Accepts:
-    - dict move
-    - tuple move
-    """
     name, power, move_type, category = _normalize_move(move)
 
     # Healing move
     if category == "heal":
         old_hp = attacker.hp
         attacker.hp = min(attacker.hp + power, attacker.max_hp)
-        healed = attacker.hp - old_hp
         return {
             "action": "heal",
-            "move_name": name,
             "user": attacker.name,
-            "target": attacker.name,
-            "healed": healed,
-            "user_hp": attacker.hp,
-            "user_max_hp": attacker.max_hp,
+            "move_name": name,
+            "healed": attacker.hp - old_hp,
         }
 
     # Damage move
@@ -100,13 +86,10 @@ def take_turn(attacker: Pokemon, defender: Pokemon, move):
 
     return {
         "action": "damage",
-        "move_name": name,
         "user": attacker.name,
-        "target": defender.name,
+        "move_name": name,
         "damage": dmg,
         "stab": stab,
-        "target_hp": defender.hp,
-        "target_max_hp": defender.max_hp,
     }
 
 
@@ -114,114 +97,139 @@ def take_turn(attacker: Pokemon, defender: Pokemon, move):
 # Enemy AI
 # -----------------------------
 def enemy_choose_move(enemy: Pokemon):
-    """Very simple AI: pick a random move."""
     return random.choice(enemy.moves)
 
 
 # -----------------------------
-# Player input (CLI)
-# -----------------------------
-def player_choose_move(player: Pokemon):
-    """CLI prompt to choose a move. Returns a move object from player.moves."""
-    while True:
-        print(f"\nChoose a move for {player.name}:")
-        for i, mv in enumerate(player.moves, start=1):
-            name, power, move_type, category = _normalize_move(mv)
-            if category == "heal":
-                print(f"{i}. {name} | Heal: {power}")
-            else:
-                print(f"{i}. {name} | Type: {move_type} | Power: {power}")
-
-        choice = input("Enter move number: ").strip()
-        if choice.isdigit():
-            idx = int(choice)
-            if 1 <= idx <= len(player.moves):
-                return player.moves[idx - 1]
-
-        print("Invalid choice, try again.")
-
-
-# -----------------------------
-# EXP + Level ups (dummy-safe)
+# EXP
 # -----------------------------
 def award_exp_if_supported(winner: Pokemon, loser: Pokemon):
-    """
-    Keeps this file safe even if EXP isn't implemented yet.
-    If your Pokemon model has gain_exp(), we call it.
-    """
     gain_exp = getattr(winner, "gain_exp", None)
-    if not callable(gain_exp):
-        return
-
-    # super simple EXP formula (dummy for now)
-    exp = 10 + loser.level * 2
-    gain_exp(exp)
+    if callable(gain_exp):
+        gain_exp(10 + loser.level * 2)
 
 
 # -----------------------------
-# 1v1 Battle loop (used by Rogue)
+# CLI rogue battle (optional)
 # -----------------------------
 def run_battle(player: Pokemon, enemy: Pokemon) -> str:
-    """
-    Runs ONE full fight: player vs enemy.
-
-    Returns:
-        "wild_fainted"   -> enemy.hp reached 0
-        "player_fainted" -> player.hp reached 0
-    """
-
     while player.hp > 0 and enemy.hp > 0:
-        # show HP (simple print; your demo boxes can wrap this later)
-        print(f"\n{player.name} HP: {player.hp}/{player.max_hp}")
-        print(f"{enemy.name} HP: {enemy.hp}/{enemy.max_hp}")
-
-        # pick moves
-        player_move = player_choose_move(player)
+        player_move = random.choice(player.moves)
         enemy_move = enemy_choose_move(enemy)
 
-        # turn order by speed (tie -> player goes first)
         player_first = player.speed >= enemy.speed
 
         if player_first:
-            # player attacks
-            res = take_turn(player, enemy, player_move)
-            _print_turn_result(res)
+            take_turn(player, enemy, player_move)
             if enemy.hp <= 0:
-                print(f"\n💥 {enemy.name} fainted!")
                 award_exp_if_supported(player, enemy)
                 return "wild_fainted"
 
-            # enemy attacks
-            res = take_turn(enemy, player, enemy_move)
-            _print_turn_result(res)
+            take_turn(enemy, player, enemy_move)
             if player.hp <= 0:
-                print(f"\n💀 {player.name} fainted!")
                 return "player_fainted"
         else:
-            # enemy attacks first
-            res = take_turn(enemy, player, enemy_move)
-            _print_turn_result(res)
+            take_turn(enemy, player, enemy_move)
             if player.hp <= 0:
-                print(f"\n💀 {player.name} fainted!")
                 return "player_fainted"
 
-            # player attacks
-            res = take_turn(player, enemy, player_move)
-            _print_turn_result(res)
+            take_turn(player, enemy, player_move)
             if enemy.hp <= 0:
-                print(f"\n💥 {enemy.name} fainted!")
                 award_exp_if_supported(player, enemy)
                 return "wild_fainted"
 
-    # fallback (shouldn't happen)
     return "player_fainted" if player.hp <= 0 else "wild_fainted"
 
 
-def _print_turn_result(result: dict) -> None:
-    """Simple readable output. Later you can wrap this in your colored boxes."""
-    if result["action"] == "heal":
-        print(f"{result['user']} used {result['move_name']} → healed {result['healed']} HP")
-        return
+# =============================
+# API BATTLE SESSION (UI)
+# =============================
+@dataclass
+class BattleSession:
+    team: List[Pokemon]
+    active_index: int
+    enemy: Pokemon
+    log: List[str] = field(default_factory=list)
 
-    stab_txt = " (STAB!)" if result.get("stab") else ""
-    print(f"{result['user']} used {result['move_name']}{stab_txt} → {result['damage']} dmg")
+    def player(self) -> Pokemon:
+        return self.team[self.active_index]
+
+    # -----------------------------
+    # Switch Pokémon
+    # -----------------------------
+    def apply_switch(self, idx: int) -> Tuple[bool, str]:
+        if idx < 0 or idx >= len(self.team):
+            self.log.append("Can't switch: invalid slot.")
+            return False, "Invalid slot."
+
+        picked = self.team[idx]
+        if picked.hp <= 0:
+            self.log.append(f"{picked.name} has fainted!")
+            return False, "That Pokémon has fainted."
+
+        self.active_index = idx
+        self.log.append(f"Go! {picked.name}!")
+        return True, "Switched."
+
+    # -----------------------------
+    # Use move
+    # -----------------------------
+    def apply_move(self, move_index: int) -> Tuple[bool, str]:
+        p = self.player()
+        e = self.enemy
+
+        # ❌ fainted Pokémon cannot act
+        if p.hp <= 0:
+            self.log.append(f"{p.name} has fainted! Switch Pokémon.")
+            return False, "Active Pokémon fainted."
+
+        # ❌ invalid move
+        if move_index < 0 or move_index >= len(p.moves):
+            self.log.append("Invalid move.")
+            return False, "Invalid move index."
+
+        player_move = p.moves[move_index]
+        enemy_move = enemy_choose_move(e)
+
+        player_first = p.speed >= e.speed
+
+        if player_first:
+            self._do_action(p, e, player_move)
+            if e.hp <= 0:
+                self.log.append(f"{e.name} fainted!")
+                award_exp_if_supported(p, e)
+                return True, "Enemy fainted."
+
+            self._do_action(e, p, enemy_move)
+            if p.hp <= 0:
+                self.log.append(f"{p.name} fainted!")
+                return True, "Player fainted."
+        else:
+            self._do_action(e, p, enemy_move)
+            if p.hp <= 0:
+                self.log.append(f"{p.name} fainted!")
+                return True, "Player fainted."
+
+            self._do_action(p, e, player_move)
+            if e.hp <= 0:
+                self.log.append(f"{e.name} fainted!")
+                award_exp_if_supported(p, e)
+                return True, "Enemy fainted."
+
+        return True, "Turn resolved."
+
+    # -----------------------------
+    # Internal executor
+    # -----------------------------
+    def _do_action(self, attacker: Pokemon, defender: Pokemon, move):
+        res = take_turn(attacker, defender, move)
+
+        if res["action"] == "heal":
+            self.log.append(
+                f"{res['user']} used {res['move_name']} → healed {res['healed']} HP"
+            )
+        else:
+            stab_txt = " (STAB!)" if res.get("stab") else ""
+            self.log.append(
+                f"{res['user']} used {res['move_name']}{stab_txt} → {res['damage']} dmg"
+            )
