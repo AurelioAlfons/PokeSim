@@ -6,7 +6,8 @@ export default function BattleArena() {
   const [log, setLog] = useState(["Loading battle..."]);
   const [player, setPlayer] = useState(null);
   const [enemy, setEnemy] = useState(null);
-  const [team, setTeam] = useState([]); // ✅ NEW
+  const [team, setTeam] = useState([]);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [panelMode, setPanelMode] = useState("main"); // main | moves | pokemon
 
   useEffect(() => {
@@ -23,7 +24,8 @@ export default function BattleArena() {
         setPlayer(data.player);
         setEnemy(data.enemy);
         setLog(data.log || []);
-        setTeam(data.team?.pokemon || []); // ✅ NEW (this is the real team)
+        setTeam(data.team?.pokemon || []);
+        setActiveIndex(data.active_index ?? 0);
       } catch (err) {
         setLog([
           "Could not connect to backend.",
@@ -41,11 +43,36 @@ export default function BattleArena() {
     return `${Math.max(0, Math.min(100, pct))}%`;
   };
 
-  // Moves for the current player pokemon (based on your current API shape)
   const moves = player?.moves || [];
 
-  // ✅ We now use the real team from API (data.team.pokemon)
-  const activeIndex = 0; // Chimchar is slot 0 for now
+  const switchTo = async (index) => {
+    try {
+      const res = await fetch("http://127.0.0.1:5000/battle/switch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ index }),
+      });
+
+      if (!res.ok) throw new Error("Switch failed");
+      const data = await res.json();
+
+      // update UI from backend truth
+      setPlayer(data.player);
+      setEnemy(data.enemy);
+      setTeam(data.team?.pokemon || []);
+      setActiveIndex(data.active_index ?? 0);
+
+      // prepend log lines
+      if (data.log?.length) {
+        setLog((p) => [...data.log, ...p]);
+      }
+
+      setPanelMode("main");
+    } catch (e) {
+      setLog((p) => ["Could not switch Pokemon (backend not reachable).", ...p]);
+      setPanelMode("main");
+    }
+  };
 
   return (
     <div
@@ -210,8 +237,8 @@ export default function BattleArena() {
           log={log}
           mode={panelMode}
           moves={moves}
-          team={team}                 // ✅ now real team from API
-          activeIndex={activeIndex}   // ✅ fixed index for now
+          team={team}
+          activeIndex={activeIndex}
           onFight={() => setPanelMode("moves")}
           onPokemon={() => setPanelMode("pokemon")}
           onBack={() => setPanelMode("main")}
@@ -219,20 +246,10 @@ export default function BattleArena() {
             const chosen = moves[i];
             if (!chosen) return;
 
-            setLog((p) => [
-              `${player?.name || "Pokemon"} used ${chosen.name}!`,
-              ...p,
-            ]);
-
+            setLog((p) => [`${player?.name || "Pokemon"} used ${chosen.name}!`, ...p]);
             setPanelMode("main");
           }}
-          onPickPokemon={(i) => {
-            const picked = team[i];
-            if (!picked) return;
-
-            setLog((p) => [`(Soon) Switch to ${picked.name}`, ...p]);
-            setPanelMode("main");
-          }}
+          onPickPokemon={(i) => switchTo(i)}
           onBag={() => setLog((p) => ["(Next) Bag items", ...p])}
           onRun={() => setLog((p) => ["(Next) Run attempt", ...p])}
         />

@@ -17,7 +17,7 @@ class SampleTeam:
                 base_stats={
                     "hp": 44,
                     "atk": 58,
-                    "def": 44,
+                    "def": 44, 
                     "spd": 61,
                 },
                 moves=[
