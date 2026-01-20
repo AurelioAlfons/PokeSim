@@ -6,7 +6,7 @@ Handles:
 - Damage + healing moves
 - STAB
 - One full turn for UI
-- One full fight for Rogue mode
+- One full fight for Rogue mode (optional)
 
 Does NOT handle:
 - Endless rogue waves
@@ -16,7 +16,6 @@ Does NOT handle:
 import random
 from dataclasses import dataclass, field
 from typing import List, Tuple
-
 from backend.models.pokemon import Pokemon
 
 
@@ -34,7 +33,7 @@ def _normalize_move(move):
     if isinstance(move, dict):
         return (
             move.get("name", "Unknown"),
-            int(move.get("power", 0)),
+            int(move.get("power", 0) or 0),
             str(move.get("type", "normal")).lower(),
             str(move.get("category", "damage")).lower(),
         )
@@ -102,31 +101,50 @@ def enemy_choose_move(enemy: Pokemon):
 
 
 # -----------------------------
-# EXP (ALL Pokémon get same EXP)
+# EXP (shared to whole team)
 # -----------------------------
-def award_exp_all(team: List[Pokemon], loser: Pokemon):
-    exp = 10 + loser.level * 2
+def _calc_exp(loser: Pokemon) -> int:
+    return 10 + loser.level * 2
+
+
+def award_exp_all(team: List[Pokemon], loser: Pokemon) -> None:
+    """
+    EXP share: everyone gets same EXP.
+    Only applies if Pokemon has gain_exp().
+    """
+    exp = _calc_exp(loser)
     for p in team:
         gain_exp = getattr(p, "gain_exp", None)
         if callable(gain_exp):
             gain_exp(exp)
 
 
-# -----------------------------
-# Reset / Heal helpers (for Run / restart)
-# -----------------------------
-def reset_team(team: List[Pokemon]) -> None:
-    """Fully heals the whole team (even fainted)."""
+def reset_team_full(team: List[Pokemon]) -> None:
+    """
+    Full reset for /run:
+    - Heal everyone
+    - Reset EXP to 0 (and exp_to_next_level if present)
+    Note: if your Pokemon.gain_exp handles exp_to_next_level, this still works.
+    """
     for p in team:
         p.hp = p.max_hp
 
+        # reset exp fields if they exist
+        if hasattr(p, "exp"):
+            p.exp = 0
+        if hasattr(p, "exp_to_next_level"):
+            # if your model recomputes this automatically, you can delete this line later
+            p.exp_to_next_level = getattr(p, "exp_to_next_level", 0)
+
 
 # -----------------------------
-# CLI rogue battle (optional)
-# NOTE: this is separate from API session.
-# If you want team-wide EXP here, pass team in.
+# Optional: CLI rogue battle
 # -----------------------------
-def run_battle(team: List[Pokemon], player: Pokemon, enemy: Pokemon) -> str:
+def run_battle(player: Pokemon, enemy: Pokemon) -> str:
+    """
+    Runs ONE full fight (CLI-ish). Not used by UI.
+    Returns: "wild_fainted" | "player_fainted"
+    """
     while player.hp > 0 and enemy.hp > 0:
         player_move = random.choice(player.moves)
         enemy_move = enemy_choose_move(enemy)
@@ -136,7 +154,6 @@ def run_battle(team: List[Pokemon], player: Pokemon, enemy: Pokemon) -> str:
         if player_first:
             take_turn(player, enemy, player_move)
             if enemy.hp <= 0:
-                award_exp_all(team, enemy)
                 return "wild_fainted"
 
             take_turn(enemy, player, enemy_move)
@@ -149,7 +166,6 @@ def run_battle(team: List[Pokemon], player: Pokemon, enemy: Pokemon) -> str:
 
             take_turn(player, enemy, player_move)
             if enemy.hp <= 0:
-                award_exp_all(team, enemy)
                 return "wild_fainted"
 
     return "player_fainted" if player.hp <= 0 else "wild_fainted"
@@ -186,13 +202,13 @@ class BattleSession:
         return True, "Switched."
 
     # -----------------------------
-    # Use move
+    # Use move (one full turn)
     # -----------------------------
     def apply_move(self, move_index: int) -> Tuple[bool, str]:
         p = self.player()
         e = self.enemy
 
-        # fainted Pokémon cannot act
+        # fainted cannot act
         if p.hp <= 0:
             self.log.append(f"{p.name} has fainted! Switch Pokémon.")
             return False, "Active Pokémon fainted."
@@ -211,7 +227,7 @@ class BattleSession:
             self._do_action(p, e, player_move)
             if e.hp <= 0:
                 self.log.append(f"{e.name} fainted!")
-                award_exp_all(self.team, e)
+                award_exp_all(self.team, e)   # ✅ EXP SHARE
                 return True, "Enemy fainted."
 
             self._do_action(e, p, enemy_move)
@@ -227,7 +243,7 @@ class BattleSession:
             self._do_action(p, e, player_move)
             if e.hp <= 0:
                 self.log.append(f"{e.name} fainted!")
-                award_exp_all(self.team, e)
+                award_exp_all(self.team, e)   # ✅ EXP SHARE
                 return True, "Enemy fainted."
 
         return True, "Turn resolved."

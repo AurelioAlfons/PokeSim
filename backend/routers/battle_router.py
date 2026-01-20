@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from backend.models.sample_team import SAMPLE_TEAM
-from backend.services.battle_service import BattleSession, reset_team
+from backend.services.battle_service import BattleSession, reset_team_full
 from backend.services.rogue_service import (
     between_fight_heal,
     compute_wave_info,
@@ -13,6 +13,9 @@ from backend.services.wild_factory import make_wild
 router = APIRouter()
 
 
+# -----------------------------
+# Helpers
+# -----------------------------
 def _poke_to_dict(p):
     return {
         "id": p.id,
@@ -27,13 +30,21 @@ def _poke_to_dict(p):
         "speed": p.speed,
         "moves": p.moves,
         "sprite": p.sprite,
-        "exp": p.exp,
-        "exp_to_next_level": p.exp_to_next_level,
+        "exp": getattr(p, "exp", 0),
+        "exp_to_next_level": getattr(p, "exp_to_next_level", 0),
+    }
+
+
+def _team_payload():
+    return {
+        "id": SAMPLE_TEAM.id,
+        "name": SAMPLE_TEAM.name,
+        "pokemon": [_poke_to_dict(x) for x in SAMPLE_TEAM.pokemon],
     }
 
 
 # -----------------------------
-# In-memory battle session
+# In-memory state
 # -----------------------------
 SESSION: BattleSession | None = None
 WAVE: int = 1
@@ -47,14 +58,9 @@ class MoveRequest(BaseModel):
     index: int
 
 
-def _team_payload():
-    return {
-        "id": SAMPLE_TEAM.id,
-        "name": SAMPLE_TEAM.name,
-        "pokemon": [_poke_to_dict(x) for x in SAMPLE_TEAM.pokemon],
-    }
-
-
+# -----------------------------
+# Session bootstrap
+# -----------------------------
 def _ensure_session() -> BattleSession:
     global SESSION, WAVE
 
@@ -69,6 +75,7 @@ def _ensure_session() -> BattleSession:
 
         player = SESSION.player()
         enemy = SESSION.enemy
+
         SESSION.log = [
             f"Wave {WAVE} begins!",
             f"A wild {enemy.name} appeared!",
@@ -79,14 +86,11 @@ def _ensure_session() -> BattleSession:
 
 
 def _state_response(session: BattleSession, ok=True, message=None):
-    player = session.player()
-    enemy = session.enemy
-
     payload = {
         "ok": ok,
         "active_index": session.active_index,
-        "player": _poke_to_dict(player),
-        "enemy": _poke_to_dict(enemy),
+        "player": _poke_to_dict(session.player()),
+        "enemy": _poke_to_dict(session.enemy),
         "team": _team_payload(),
         "log": session.log,
         "wave": WAVE,
@@ -106,6 +110,8 @@ def start_battle():
     global SESSION, WAVE
 
     WAVE = 1
+    reset_team_full(SAMPLE_TEAM.pokemon)
+
     SESSION = BattleSession(
         team=SAMPLE_TEAM.pokemon,
         active_index=0,
@@ -133,15 +139,16 @@ def start_battle():
 @router.post("/run")
 def run_away():
     """
-    Run = restart the run:
-    - wave back to 1
-    - fully heal entire team (even fainted)
-    - spawn fresh wild
+    Run = full reset:
+    - wave → 1
+    - HP reset
+    - EXP reset
+    - new wild Pokémon
     """
     global SESSION, WAVE
 
     WAVE = 1
-    reset_team(SAMPLE_TEAM.pokemon)
+    reset_team_full(SAMPLE_TEAM.pokemon)
 
     SESSION = BattleSession(
         team=SAMPLE_TEAM.pokemon,
@@ -152,17 +159,11 @@ def run_away():
 
     player = SESSION.player()
     enemy = SESSION.enemy
+
     SESSION.log.append(f"A wild {enemy.name} appeared!")
     SESSION.log.append(f"Go! {player.name}!")
 
-    return {
-        "team": _team_payload(),
-        "active_index": SESSION.active_index,
-        "player": _poke_to_dict(player),
-        "enemy": _poke_to_dict(enemy),
-        "log": SESSION.log,
-        "wave": WAVE,
-    }
+    return _state_response(SESSION, ok=True)
 
 
 @router.post("/move")
@@ -178,25 +179,22 @@ def use_move(body: MoveRequest):
     # Rogue progression
     # -----------------------------
     if msg == "Enemy fainted.":
-        # Team wipe check (safe guard)
+        # team wiped = force run
         if team_wiped(session.team):
-            session.log.append("💀 Your team has been wiped. Run over.")
+            session.log.append("Your team has been wiped. Run over.")
             return _state_response(session, ok=True, message=msg)
 
-        # Heal team slightly
+        # small heal between waves
         between_fight_heal(session.team)
 
-        # Next wave
+        # next wave
         WAVE += 1
         info = compute_wave_info(session.team, WAVE)
 
-        # Spawn next wild
         session.enemy = make_wild(level=info.wild_level)
-
         session.log.append(f"Wave {WAVE} begins!")
         session.log.append(f"A wild {session.enemy.name} appeared!")
 
-    # IMPORTANT: always return message so frontend can force-switch
     return _state_response(session, ok=ok, message=msg)
 
 
