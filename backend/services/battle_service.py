@@ -108,6 +108,13 @@ def award_exp_if_supported(winner: Pokemon, loser: Pokemon):
     if callable(gain_exp):
         gain_exp(10 + loser.level * 2)
 
+# -----------------------------
+# Reset / Heal helpers (for Run / restart)
+# -----------------------------
+def reset_team(team: List[Pokemon]) -> None:
+    """Fully heals the whole team (even fainted)."""
+    for p in team:
+        p.hp = p.max_hp
 
 # -----------------------------
 # CLI rogue battle (optional)

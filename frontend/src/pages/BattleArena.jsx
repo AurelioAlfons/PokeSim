@@ -27,7 +27,8 @@ export default function BattleArena() {
         setLog(data.log || []);
         setTeam(data.team?.pokemon || []);
         setActiveIndex(data.active_index ?? 0);
-        setForceSwitch(false); // 🔴 NEW
+        setForceSwitch(false);
+        setPanelMode("main");
       } catch (err) {
         setLog([
           "Could not connect to backend.",
@@ -46,6 +47,30 @@ export default function BattleArena() {
   };
 
   const moves = player?.moves || [];
+
+  const doRun = async () => {
+    try {
+      const res = await fetch("http://127.0.0.1:5000/battle/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!res.ok) throw new Error("Run failed");
+      const data = await res.json();
+
+      setPlayer(data.player);
+      setEnemy(data.enemy);
+      setTeam(data.team?.pokemon || []);
+      setActiveIndex(data.active_index ?? 0);
+
+      if (data.log?.length) setLog((p) => [...data.log, ...p]);
+
+      setForceSwitch(false);
+      setPanelMode("main");
+    } catch (e) {
+      setLog((p) => ["Could not run (backend not reachable).", ...p]);
+    }
+  };
 
   const switchTo = async (index) => {
     try {
@@ -67,7 +92,7 @@ export default function BattleArena() {
         setLog((p) => [...data.log, ...p]);
       }
 
-      setForceSwitch(false); // 🔴 NEW
+      setForceSwitch(false);
       setPanelMode("main");
     } catch (e) {
       setLog((p) => ["Could not switch Pokemon (backend not reachable).", ...p]);
@@ -272,13 +297,13 @@ export default function BattleArena() {
           moves={moves}
           team={team}
           activeIndex={activeIndex}
-          onFight={() => !forceSwitch && setPanelMode("moves")} // 🔴 LOCKED
+          onFight={() => (forceSwitch ? null : setPanelMode("moves"))}
           onPokemon={() => setPanelMode("pokemon")}
-          onBack={() => !forceSwitch && setPanelMode("main")} // 🔴 LOCKED
+          onBack={() => setPanelMode("main")}
           onPickMove={(i) => doMove(i)}
           onPickPokemon={(i) => switchTo(i)}
           onBag={() => setLog((p) => ["(Next) Bag items", ...p])}
-          onRun={() => setLog((p) => ["(Next) Run attempt", ...p])}
+          onRun={() => doRun()}
         />
       </div>
     </div>
