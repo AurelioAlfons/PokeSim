@@ -12,7 +12,7 @@ class SampleTeam:
             Pokemon(
                 pokedex_id=390,
                 name="Chimchar",
-                level=5,
+                level=6,
                 types=["fire"],
                 base_stats={
                     "hp": 44,
@@ -38,7 +38,7 @@ class SampleTeam:
             Pokemon(
                 pokedex_id=399,
                 name="Bidoof",
-                level=5,
+                level=6,
                 types=["normal"],
                 base_stats={
                     "hp": 59,
@@ -58,7 +58,7 @@ class SampleTeam:
             Pokemon(
                 pokedex_id=396,
                 name="Starly",
-                level=5,
+                level=6,
                 types=["normal", "flying"],
                 base_stats={
                     "hp": 40,

@@ -46,6 +46,12 @@ export default function BattleArena() {
     return `${Math.max(0, Math.min(100, pct))}%`;
   };
 
+  const expPct = (p) => {
+    if (!p || !p.exp_to_next_level) return "0%";
+    const pct = (p.exp / p.exp_to_next_level) * 100;
+    return `${Math.max(0, Math.min(100, pct))}%`;
+  };
+
   const moves = player?.moves || [];
 
   const doRun = async () => {
@@ -255,6 +261,25 @@ export default function BattleArena() {
                   width: hpPct(player),
                   height: "100%",
                   background: "#25c05a",
+                }}
+              />
+            </div>
+
+            {/* EXP Bar */}
+            <div
+              style={{
+                marginTop: 6,
+                height: 6,
+                borderRadius: 999,
+                background: "rgba(0,0,0,0.15)",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  width: expPct(player),
+                  height: "100%",
+                  background: "#4aa3ff", // Pokémon blue EXP
                 }}
               />
             </div>
