@@ -1,6 +1,7 @@
 // src/pages/BattleArena.jsx
 import React, { useEffect, useState } from "react";
 import BattlePanel from "../components/BattlePanel";
+import PokemonSprite from "../components/PokemonSprite";
 
 export default function BattleArena() {
   const [log, setLog] = useState(["Loading battle..."]);
@@ -94,9 +95,7 @@ export default function BattleArena() {
       setTeam(data.team?.pokemon || []);
       setActiveIndex(data.active_index ?? 0);
 
-      if (data.log?.length) {
-        setLog((p) => [...data.log, ...p]);
-      }
+      if (data.log?.length) setLog((p) => [...data.log, ...p]);
 
       setForceSwitch(false);
       setPanelMode("main");
@@ -200,32 +199,14 @@ export default function BattleArena() {
             </div>
           </div>
 
-          {/* Enemy sprite */}
-          <div
-            style={{
-              position: "absolute",
-              top: 110,
-              right: 90,
-              width: 200,
-              height: 200,
-              display: "grid",
-              placeItems: "center",
-              opacity: 0.98,
-            }}
-          >
-            {enemy ? (
-              <img
-                src={enemy.sprite}
-                alt={enemy.name}
-                width={190}
-                style={{
-                  imageRendering: "pixelated",
-                  transform: "scaleX(-1)",
-                }}
-              />
-            ) : (
-              <div style={{ fontWeight: 900 }}>(Loading...)</div>
-            )}
+          {/* Enemy sprite (consistent sizing) */}
+          <div style={{ position: "absolute", top: 110, right: 90 }}>
+            <PokemonSprite
+              src={enemy?.sprite}
+              alt={enemy?.name || "Enemy"}
+              size={210}
+              flip={true}
+            />
           </div>
 
           {/* Player HUD */}
@@ -279,7 +260,7 @@ export default function BattleArena() {
                 style={{
                   width: expPct(player),
                   height: "100%",
-                  background: "#4aa3ff", // Pokémon blue EXP
+                  background: "#4aa3ff",
                 }}
               />
             </div>
@@ -289,29 +270,14 @@ export default function BattleArena() {
             </div>
           </div>
 
-          {/* Player sprite */}
-          <div
-            style={{
-              position: "absolute",
-              bottom: 150,
-              left: 100,
-              width: 200,
-              height: 200,
-              display: "grid",
-              placeItems: "center",
-              opacity: 0.98,
-            }}
-          >
-            {player ? (
-              <img
-                src={player.sprite}
-                alt={player.name}
-                width={190}
-                style={{ imageRendering: "pixelated" }}
-              />
-            ) : (
-              <div style={{ fontWeight: 900 }}>(Loading...)</div>
-            )}
+          {/* Player sprite (consistent sizing) */}
+          <div style={{ position: "absolute", bottom: 150, left: 100 }}>
+            <PokemonSprite
+              src={player?.sprite}
+              alt={player?.name || "Player"}
+              size={220}
+              flip={false}
+            />
           </div>
         </div>
 
