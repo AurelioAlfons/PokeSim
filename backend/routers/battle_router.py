@@ -12,7 +12,6 @@ from backend.services.wild_factory import make_wild
 
 router = APIRouter()
 
-
 # -----------------------------
 # Helpers
 # -----------------------------
@@ -43,6 +42,16 @@ def _team_payload():
     }
 
 
+def _spawn_enemy_for_wave(session: BattleSession, wave: int):
+    """
+    Always spawn wild using the rogue scaling rules.
+    This keeps /start, /run, _ensure_session, and wave progression consistent.
+    """
+    info = compute_wave_info(session.team, wave)
+    session.enemy = make_wild(level=info.wild_level)
+    return info
+
+
 # -----------------------------
 # In-memory state
 # -----------------------------
@@ -69,9 +78,11 @@ def _ensure_session() -> BattleSession:
         SESSION = BattleSession(
             team=SAMPLE_TEAM.pokemon,
             active_index=0,
-            enemy=make_wild(level=5),
+            enemy=make_wild(level=1),  # placeholder, overwritten below
             log=[],
         )
+
+        _spawn_enemy_for_wave(SESSION, WAVE)
 
         player = SESSION.player()
         enemy = SESSION.enemy
@@ -115,9 +126,11 @@ def start_battle():
     SESSION = BattleSession(
         team=SAMPLE_TEAM.pokemon,
         active_index=0,
-        enemy=make_wild(level=5),
+        enemy=make_wild(level=1),  # placeholder, overwritten below
         log=[],
     )
+
+    _spawn_enemy_for_wave(SESSION, WAVE)
 
     player = SESSION.player()
     enemy = SESSION.enemy
@@ -143,7 +156,7 @@ def run_away():
     - wave → 1
     - HP reset
     - EXP reset
-    - new wild Pokémon
+    - new wild Pokémon (using wave scaling)
     """
     global SESSION, WAVE
 
@@ -153,9 +166,11 @@ def run_away():
     SESSION = BattleSession(
         team=SAMPLE_TEAM.pokemon,
         active_index=0,
-        enemy=make_wild(level=5),
+        enemy=make_wild(level=1),  # placeholder, overwritten below
         log=["You ran away!", f"Wave {WAVE} begins!"],
     )
+
+    _spawn_enemy_for_wave(SESSION, WAVE)
 
     player = SESSION.player()
     enemy = SESSION.enemy
@@ -189,9 +204,8 @@ def use_move(body: MoveRequest):
 
         # next wave
         WAVE += 1
-        info = compute_wave_info(session.team, WAVE)
+        _spawn_enemy_for_wave(session, WAVE)
 
-        session.enemy = make_wild(level=info.wild_level)
         session.log.append(f"Wave {WAVE} begins!")
         session.log.append(f"A wild {session.enemy.name} appeared!")
 

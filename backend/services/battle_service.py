@@ -6,7 +6,9 @@ Handles:
 - Damage + healing moves
 - STAB
 - One full turn for UI
-- One full fight for Rogue mode (optional)
+
+EXP:
+- Uses backend/services/exp_service.py (single source of truth)
 
 Does NOT handle:
 - Endless rogue waves
@@ -17,6 +19,7 @@ import random
 from dataclasses import dataclass, field
 from typing import List, Tuple
 from backend.models.pokemon import Pokemon
+from backend.services.exp_service import award_exp  # ✅ use the real EXP service
 
 
 # -----------------------------
@@ -98,25 +101,6 @@ def take_turn(attacker: Pokemon, defender: Pokemon, move):
 # -----------------------------
 def enemy_choose_move(enemy: Pokemon):
     return random.choice(enemy.moves)
-
-
-# -----------------------------
-# EXP (shared to whole team)
-# -----------------------------
-def _calc_exp(loser: Pokemon) -> int:
-    return 10 + loser.level * 2
-
-
-def award_exp_all(team: List[Pokemon], loser: Pokemon) -> None:
-    """
-    EXP share: everyone gets same EXP.
-    Only applies if Pokemon has gain_exp().
-    """
-    exp = _calc_exp(loser)
-    for p in team:
-        gain_exp = getattr(p, "gain_exp", None)
-        if callable(gain_exp):
-            gain_exp(exp)
 
 
 def reset_team_full(team: List[Pokemon]) -> None:
@@ -227,7 +211,16 @@ class BattleSession:
             self._do_action(p, e, player_move)
             if e.hp <= 0:
                 self.log.append(f"{e.name} fainted!")
-                award_exp_all(self.team, e)   # ✅ EXP SHARE
+
+                # ✅ EXP via exp_service (active gets bonus, team gets share)
+                rows = award_exp(team=self.team, active=p, wild=e)
+                for r in rows:
+                    self.log.append(f"{r.name} gained {r.gained} EXP!")
+                    if r.leveled_up:
+                        self.log.append(
+                            f"{r.name} leveled up! ({r.before_level} → {r.after_level})"
+                        )
+
                 return True, "Enemy fainted."
 
             self._do_action(e, p, enemy_move)
@@ -243,7 +236,16 @@ class BattleSession:
             self._do_action(p, e, player_move)
             if e.hp <= 0:
                 self.log.append(f"{e.name} fainted!")
-                award_exp_all(self.team, e)   # ✅ EXP SHARE
+
+                # ✅ EXP via exp_service (active gets bonus, team gets share)
+                rows = award_exp(team=self.team, active=p, wild=e)
+                for r in rows:
+                    self.log.append(f"{r.name} gained {r.gained} EXP!")
+                    if r.leveled_up:
+                        self.log.append(
+                            f"{r.name} leveled up! ({r.before_level} → {r.after_level})"
+                        )
+
                 return True, "Enemy fainted."
 
         return True, "Turn resolved."

@@ -19,8 +19,8 @@ def award_exp(team: list[Pokemon], active: Pokemon, wild: Pokemon) -> list[ExpGa
     Reusable EXP logic.
     Returns rows that UI/CLI can render however they want.
     """
-    base_exp = 10 + (wild.level * 2)
-    active_mult = 1.5
+    base_exp = 15 + (wild.level * 5)
+    active_mult = 1.75
 
     rows: list[ExpGainRow] = []
     for p in team:

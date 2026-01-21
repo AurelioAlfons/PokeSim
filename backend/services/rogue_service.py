@@ -38,7 +38,10 @@ class WaveInfo:
 
 
 def compute_wave_info(team: list[Pokemon], wave: int) -> WaveInfo:
-    base_level = max(1, lowest_alive_level(team) - 2)
-    ramp = wave // 3
-    wild_level = base_level + ramp
-    return WaveInfo(wave=wave, base_level=base_level, ramp=ramp, wild_level=wild_level)
+    wild_level = max(1, lowest_alive_level(team) - 2)
+    return WaveInfo(
+        wave=wave,
+        base_level=wild_level,
+        ramp=0,
+        wild_level=wild_level,
+    )
