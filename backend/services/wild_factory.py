@@ -7,34 +7,48 @@ from backend.models.pokemon import Pokemon
 
 def make_wild(level: int) -> Pokemon:
     pool = [
+        # -----------------------------
+        # Staraptor
+        # -----------------------------
         (
-            "Bidoof",
-            399,
-            ["normal"],
-            {"hp": 59, "atk": 45, "def": 40, "spd": 31},
-            [
-                {"name": "Tackle", "power": 40, "type": "normal", "category": "damage"},
-                {"name": "Rest", "power": 5, "type": "normal", "category": "heal"},
-            ],
-        ),
-        (
-            "Starly",
-            396,
+            "Staraptor",
+            398,
             ["normal", "flying"],
-            {"hp": 40, "atk": 55, "def": 30, "spd": 60},
+            {"hp": 85, "atk": 120, "def": 70, "spd": 100},
             [
-                {"name": "Tackle", "power": 40, "type": "normal", "category": "damage"},
-                {"name": "QuickAtk", "power": 40, "type": "normal", "category": "damage"},
+                {"name": "Brave Bird", "power": 120, "type": "flying", "category": "damage"},
+                {"name": "Close Combat", "power": 120, "type": "fighting", "category": "damage"},
+                {"name": "Quick Attack", "power": 40, "type": "normal", "category": "damage"},
             ],
         ),
+
+        # -----------------------------
+        # Lucario
+        # -----------------------------
         (
-            "Shinx",
-            403,
-            ["electric"],
-            {"hp": 45, "atk": 65, "def": 34, "spd": 45},
+            "Lucario",
+            448,
+            ["fighting", "steel"],
+            {"hp": 70, "atk": 110, "def": 70, "spd": 90},
             [
-                {"name": "Tackle", "power": 40, "type": "normal", "category": "damage"},
-                {"name": "Spark", "power": 40, "type": "electric", "category": "damage"},
+                {"name": "Aura Sphere", "power": 80, "type": "fighting", "category": "damage"},
+                {"name": "Flash Cannon", "power": 80, "type": "steel", "category": "damage"},
+                {"name": "Extreme Speed", "power": 80, "type": "normal", "category": "damage"},
+            ],
+        ),
+
+        # -----------------------------
+        # Garchomp
+        # -----------------------------
+        (
+            "Garchomp",
+            445,
+            ["dragon", "ground"],
+            {"hp": 108, "atk": 130, "def": 95, "spd": 102},
+            [
+                {"name": "Dragon Claw", "power": 80, "type": "dragon", "category": "damage"},
+                {"name": "Earthquake", "power": 100, "type": "ground", "category": "damage"},
+                {"name": "Crunch", "power": 80, "type": "dark", "category": "damage"},
             ],
         ),
     ]

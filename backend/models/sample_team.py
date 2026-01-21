@@ -6,73 +6,132 @@ from backend.models.pokemon import Pokemon
 class SampleTeam:
     def __init__(self):
         self.id = "sample"
-        self.name = "Sample Team"
+        self.name = "Sinnoh Starters"
 
         self.pokemon = [
+            # -----------------------------
+            # Infernape
+            # -----------------------------
             Pokemon(
-                pokedex_id=390,
-                name="Chimchar",
-                level=6,
-                types=["fire"],
+                pokedex_id=392,
+                name="Infernape",
+                level=36,
+                types=["fire", "fighting"],
                 base_stats={
-                    "hp": 44,
-                    "atk": 58,
-                    "def": 44, 
-                    "spd": 61,
+                    "hp": 76,
+                    "atk": 104,
+                    "def": 71,
+                    "spd": 108,
                 },
                 moves=[
                     {
-                        "name": "Scratch",
-                        "power": 40,
-                        "type": "normal",
-                        "category": "damage",
-                    },
-                    {
-                        "name": "Ember",
-                        "power": 40,
+                        "name": "Flamethrower",
+                        "power": 90,
                         "type": "fire",
                         "category": "damage",
                     },
+                    {
+                        "name": "Close Combat",
+                        "power": 120,
+                        "type": "fighting",
+                        "category": "damage",
+                    },
+                    {
+                        "name": "Mach Punch",
+                        "power": 40,
+                        "type": "fighting",
+                        "category": "damage",
+                    },
+                    {
+                        "name": "Bulk Up",
+                        "power": 10,
+                        "type": "fighting",
+                        "category": "heal",
+                    },
                 ],
             ),
+
+            # -----------------------------
+            # Torterra
+            # -----------------------------
             Pokemon(
-                pokedex_id=399,
-                name="Bidoof",
-                level=6,
-                types=["normal"],
+                pokedex_id=389,
+                name="Torterra",
+                level=36,
+                types=["grass", "ground"],
                 base_stats={
-                    "hp": 59,
-                    "atk": 45,
-                    "def": 40,
-                    "spd": 31,
+                    "hp": 95,
+                    "atk": 109,
+                    "def": 105,
+                    "spd": 56,
                 },
                 moves=[
                     {
-                        "name": "Tackle",
-                        "power": 40,
-                        "type": "normal",
+                        "name": "Razor Leaf",
+                        "power": 55,
+                        "type": "grass",
                         "category": "damage",
-                    }
+                    },
+                    {
+                        "name": "Earthquake",
+                        "power": 100,
+                        "type": "ground",
+                        "category": "damage",
+                    },
+                    {
+                        "name": "Crunch",
+                        "power": 80,
+                        "type": "dark",
+                        "category": "damage",
+                    },
+                    {
+                        "name": "Synthesis",
+                        "power": 40,
+                        "type": "grass",
+                        "category": "heal",
+                    },
                 ],
             ),
+
+            # -----------------------------
+            # Empoleon
+            # -----------------------------
             Pokemon(
-                pokedex_id=396,
-                name="Starly",
-                level=6,
-                types=["normal", "flying"],
+                pokedex_id=395,
+                name="Empoleon",
+                level=36,
+                types=["water", "steel"],
                 base_stats={
-                    "hp": 40,
-                    "atk": 55,
-                    "def": 30,
+                    "hp": 84,
+                    "atk": 86,
+                    "def": 88,
                     "spd": 60,
                 },
                 moves=[
                     {
-                        "name": "Quick Attack",
-                        "power": 40,
-                        "type": "normal",
+                        "name": "Surf",
+                        "power": 90,
+                        "type": "water",
                         "category": "damage",
-                    }
+                    },
+                    {
+                        "name": "Flash Cannon",
+                        "power": 80,
+                        "type": "steel",
+                        "category": "damage",
+                    },
+                    {
+                        "name": "Ice Beam",
+                        "power": 90,
+                        "type": "ice",
+                        "category": "damage",
+                    },
+                    {
+                        "name": "Aqua Ring",
+                        "power": 15,
+                        "type": "water",
+                        "category": "heal",
+                    },
                 ],
             ),
         ]
