@@ -17,15 +17,16 @@ Does NOT handle:
 
 import random
 from dataclasses import dataclass, field
-from typing import List, Tuple
+from typing import Any, List, Tuple
+
 from backend.models.pokemon import Pokemon
-from backend.services.exp_service import award_exp  # ✅ use the real EXP service
+from backend.services.exp_service import award_exp
 
 
 # -----------------------------
 # Move helpers
 # -----------------------------
-def _normalize_move(move):
+def _normalize_move(move: Any) -> Tuple[str, int, str, str]:
     """
     Supports BOTH formats:
     - dict: {"name": "...", "power": 40, "type": "fire", "category": "damage"}
@@ -35,7 +36,7 @@ def _normalize_move(move):
     """
     if isinstance(move, dict):
         return (
-            move.get("name", "Unknown"),
+            str(move.get("name", "Unknown")),
             int(move.get("power", 0) or 0),
             str(move.get("type", "normal")).lower(),
             str(move.get("category", "damage")).lower(),
@@ -51,7 +52,7 @@ def _normalize_move(move):
 # -----------------------------
 # Damage
 # -----------------------------
-def damage_calc(attacker: Pokemon, defender: Pokemon, power: int, move_type: str):
+def damage_calc(attacker: Pokemon, defender: Pokemon, power: int, move_type: str) -> Tuple[int, bool]:
     """Basic damage calc with STAB."""
     lvl = (2 * attacker.level) / 5 + 2
     defense = max(1, defender.defense)
@@ -69,7 +70,7 @@ def damage_calc(attacker: Pokemon, defender: Pokemon, power: int, move_type: str
 # -----------------------------
 # Execute a move
 # -----------------------------
-def take_turn(attacker: Pokemon, defender: Pokemon, move):
+def take_turn(attacker: Pokemon, defender: Pokemon, move: Any) -> dict:
     name, power, move_type, category = _normalize_move(move)
 
     # Healing move
@@ -83,7 +84,7 @@ def take_turn(attacker: Pokemon, defender: Pokemon, move):
             "healed": attacker.hp - old_hp,
         }
 
-    # Damage move
+    # Damage move (default)
     dmg, stab = damage_calc(attacker, defender, power, move_type)
     defender.hp = max(defender.hp - dmg, 0)
 
@@ -99,60 +100,8 @@ def take_turn(attacker: Pokemon, defender: Pokemon, move):
 # -----------------------------
 # Enemy AI
 # -----------------------------
-def enemy_choose_move(enemy: Pokemon):
+def enemy_choose_move(enemy: Pokemon) -> Any:
     return random.choice(enemy.moves)
-
-
-def reset_team_full(team: List[Pokemon]) -> None:
-    """
-    Full reset for /run:
-    - Heal everyone
-    - Reset EXP to 0 (and exp_to_next_level if present)
-    Note: if your Pokemon.gain_exp handles exp_to_next_level, this still works.
-    """
-    for p in team:
-        p.hp = p.max_hp
-
-        # reset exp fields if they exist
-        if hasattr(p, "exp"):
-            p.exp = 0
-        if hasattr(p, "exp_to_next_level"):
-            # if your model recomputes this automatically, you can delete this line later
-            p.exp_to_next_level = getattr(p, "exp_to_next_level", 0)
-
-
-# -----------------------------
-# Optional: CLI rogue battle
-# -----------------------------
-def run_battle(player: Pokemon, enemy: Pokemon) -> str:
-    """
-    Runs ONE full fight (CLI-ish). Not used by UI.
-    Returns: "wild_fainted" | "player_fainted"
-    """
-    while player.hp > 0 and enemy.hp > 0:
-        player_move = random.choice(player.moves)
-        enemy_move = enemy_choose_move(enemy)
-
-        player_first = player.speed >= enemy.speed
-
-        if player_first:
-            take_turn(player, enemy, player_move)
-            if enemy.hp <= 0:
-                return "wild_fainted"
-
-            take_turn(enemy, player, enemy_move)
-            if player.hp <= 0:
-                return "player_fainted"
-        else:
-            take_turn(enemy, player, enemy_move)
-            if player.hp <= 0:
-                return "player_fainted"
-
-            take_turn(player, enemy, player_move)
-            if enemy.hp <= 0:
-                return "wild_fainted"
-
-    return "player_fainted" if player.hp <= 0 else "wild_fainted"
 
 
 # =============================
@@ -186,6 +135,16 @@ class BattleSession:
         return True, "Switched."
 
     # -----------------------------
+    # EXP helper
+    # -----------------------------
+    def _award_exp_for_faint(self, active: Pokemon, wild: Pokemon) -> None:
+        rows = award_exp(team=self.team, active=active, wild=wild)
+        for r in rows:
+            self.log.append(f"{r.name} gained {r.gained} EXP!")
+            if r.leveled_up:
+                self.log.append(f"{r.name} leveled up! ({r.before_level} → {r.after_level})")
+
+    # -----------------------------
     # Use move (one full turn)
     # -----------------------------
     def apply_move(self, move_index: int) -> Tuple[bool, str]:
@@ -205,63 +164,50 @@ class BattleSession:
         player_move = p.moves[move_index]
         enemy_move = enemy_choose_move(e)
 
+        def player_attack() -> str | None:
+            self._do_action(p, e, player_move)
+            if e.hp <= 0:
+                self.log.append(f"{e.name} fainted!")
+                self._award_exp_for_faint(active=p, wild=e)
+                return "Enemy fainted."
+            return None
+
+        def enemy_attack() -> str | None:
+            self._do_action(e, p, enemy_move)
+            if p.hp <= 0:
+                self.log.append(f"{p.name} fainted!")
+                return "Player fainted."
+            return None
+
         player_first = p.speed >= e.speed
 
         if player_first:
-            self._do_action(p, e, player_move)
-            if e.hp <= 0:
-                self.log.append(f"{e.name} fainted!")
+            out = player_attack()
+            if out:
+                return True, out
 
-                # ✅ EXP via exp_service (active gets bonus, team gets share)
-                rows = award_exp(team=self.team, active=p, wild=e)
-                for r in rows:
-                    self.log.append(f"{r.name} gained {r.gained} EXP!")
-                    if r.leveled_up:
-                        self.log.append(
-                            f"{r.name} leveled up! ({r.before_level} → {r.after_level})"
-                        )
-
-                return True, "Enemy fainted."
-
-            self._do_action(e, p, enemy_move)
-            if p.hp <= 0:
-                self.log.append(f"{p.name} fainted!")
-                return True, "Player fainted."
+            out = enemy_attack()
+            if out:
+                return True, out
         else:
-            self._do_action(e, p, enemy_move)
-            if p.hp <= 0:
-                self.log.append(f"{p.name} fainted!")
-                return True, "Player fainted."
+            out = enemy_attack()
+            if out:
+                return True, out
 
-            self._do_action(p, e, player_move)
-            if e.hp <= 0:
-                self.log.append(f"{e.name} fainted!")
-
-                # ✅ EXP via exp_service (active gets bonus, team gets share)
-                rows = award_exp(team=self.team, active=p, wild=e)
-                for r in rows:
-                    self.log.append(f"{r.name} gained {r.gained} EXP!")
-                    if r.leveled_up:
-                        self.log.append(
-                            f"{r.name} leveled up! ({r.before_level} → {r.after_level})"
-                        )
-
-                return True, "Enemy fainted."
+            out = player_attack()
+            if out:
+                return True, out
 
         return True, "Turn resolved."
 
     # -----------------------------
     # Internal executor
     # -----------------------------
-    def _do_action(self, attacker: Pokemon, defender: Pokemon, move):
+    def _do_action(self, attacker: Pokemon, defender: Pokemon, move: Any) -> None:
         res = take_turn(attacker, defender, move)
 
         if res["action"] == "heal":
-            self.log.append(
-                f"{res['user']} used {res['move_name']} → healed {res['healed']} HP"
-            )
+            self.log.append(f"{res['user']} used {res['move_name']} → healed {res['healed']} HP")
         else:
             stab_txt = " (STAB!)" if res.get("stab") else ""
-            self.log.append(
-                f"{res['user']} used {res['move_name']}{stab_txt} → {res['damage']} dmg"
-            )
+            self.log.append(f"{res['user']} used {res['move_name']}{stab_txt} → {res['damage']} dmg")
