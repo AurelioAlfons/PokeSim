@@ -1,10 +1,18 @@
 # <img src="assets/SVG/445.svg" width="70" /> PokeSim – Gen 4 Pokémon Battle Simulator
 
+## 🌐 Live Demo
+
+[🚀 Try the App](https://poke-sim-two.vercel.app)
+
+- Frontend: https://poke-sim-two.vercel.app  
+- Backend API: https://pokesim-backend.onrender.com/docs  
+
+---
+
 ![React](https://img.shields.io/badge/Frontend-React-blue?logo=react&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/Backend-FastAPI-teal?logo=fastapi&logoColor=white)
 ![Python](https://img.shields.io/badge/Language-Python-yellow?logo=python&logoColor=white)
-![SQLite](https://img.shields.io/badge/Database-SQLite-lightgrey?logo=sqlite&logoColor=white)
-![Status](https://img.shields.io/badge/Status-Early%20WIP-orange)
+![Status](https://img.shields.io/badge/Status-Live-green)
 
 ---
 
@@ -15,67 +23,70 @@ This repo is my attempt at creating a small Pokémon battle simulator that focus
 ## <img src="assets/SVG/392.svg" width="70" /> What This Project Is
 
 - A Gen 4–only Pokémon battle simulator (for now)  
-- A learning project for frontend ↔ backend ↔ database  
+- A learning project for frontend ↔ backend connection  
 - A place to experiment with:
   - Team building  
   - Damage calculation  
-  - Basic turn-based battle logic  
+  - Turn-based battle logic  
 
 ---
 
 ## <img src="assets/SVG/389.svg" width="70" /> Tech Stack
 
-- **Frontend:** React  
+- **Frontend:** React (Create React App)  
 - **Backend:** Python + FastAPI  
-- **Database:** PostgreSQL  
-- **API:** REST (JSON)  
+- **API:** REST API (JSON requests & responses)  
+- **Hosting:**  
+  - Vercel (frontend)  
+  - Render (backend)  
 
 ---
 
 ## <img src="assets/SVG/395.svg" width="70" /> Core Features
 
-- **Pokémon Database (Gen 4):**
-  - Names  
-  - Types  
-  - Base stats  
-  - Moves  
-  - Abilities  
+- **Battle System:**
+  - Turn-based battle flow  
+  - Move selection, switching, running  
+  - HP + EXP system  
 
-- **Team Builder:**
-  - Create a team of up to 6 Pokémon  
-  - Select moves and abilities  
+- **Rogue Mode:**
+  - Wild Pokémon scale based on your team  
+  - Wave progression system  
+  - Between-battle healing  
 
-- **Battle Simulator:**
-  - Fight trainer teams or wild “rogue” Pokémon  
-  - Simple damage formula  
-  - Text-based battle results  
-  - No animations yet  
+- **Frontend ↔ Backend Integration:**
+  - Frontend sends actions (move, switch, run)  
+  - Backend processes logic  
+  - Returns updated battle state  
 
 ---
 
-## <img src="assets/SVG/466.svg" width="70" /> Planned Flow
+## <img src="assets/SVG/466.svg" width="70" /> How It Works
 
-- Fetch Pokémon data from FastAPI  
-- Display using React (Pokémon list, team builder, battle page)  
-- Send battle actions to backend:
-  - “Use move”
-  - Backend calculates damage
-  - Return results to frontend  
+- React UI sends requests → FastAPI backend  
+- Backend calculates battle logic  
+- Returns updated Pokémon stats + logs  
+- UI updates instantly  
 
 ---
 
 ## <img src="assets/SVG/398.svg" width="70" /> Current Status
 
-- Project folders set up  
-- React frontend created  
-- FastAPI backend planned  
-- Starting with small Gen 4 Pokémon dataset  
-- Connecting frontend → backend next  
+- Backend fully deployed on Render  
+- Frontend deployed on Vercel  
+- Frontend connected to live backend  
+- Battle system fully working (start, move, switch, run)  
+- Rogue mode implemented with scaling enemies  
+- Basic UI working with battle panel and sprites  
 
 ---
 
 ## <img src="assets/SVG/493.svg" width="70" /> Future Ideas
 
-- Expand to more generations  
-- Add more move effects, status conditions  
-- Add animations or polished UI later  
+- Expand to more Pokémon generations  
+- Add more move effects + status conditions  
+- Save teams (database later)  
+- Better UI + animations  
+- Multiplayer / PvP mode  
+
+---
