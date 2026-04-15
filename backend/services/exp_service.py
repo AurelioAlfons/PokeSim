@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from backend.models.pokemon import Pokemon
+from models.pokemon import Pokemon
 
 
 @dataclass

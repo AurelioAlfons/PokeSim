@@ -1,6 +1,6 @@
 # backend/data/sample_team.py
 
-from backend.models.pokemon import Pokemon
+from models.pokemon import Pokemon
 
 
 class SampleTeam:

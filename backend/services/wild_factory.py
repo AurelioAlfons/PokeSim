@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import random
-from backend.models.pokemon import Pokemon
+from models.pokemon import Pokemon
 
 
 def make_wild(level: int) -> Pokemon:

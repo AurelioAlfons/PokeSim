@@ -5,7 +5,7 @@ Keeping this separate so battle_service.py stays focused on battle mechanics.
 """
 
 from typing import List
-from backend.models.pokemon import Pokemon
+from models.pokemon import Pokemon
 
 
 def reset_team_full(team: List[Pokemon]) -> None:

@@ -8,7 +8,7 @@ Handles:
 - One full turn for UI
 
 EXP:
-- Uses backend/services/exp_service.py (single source of truth)
+- Uses /services/exp_service.py (single source of truth)
 
 Does NOT handle:
 - Endless rogue waves
@@ -19,8 +19,8 @@ import random
 from dataclasses import dataclass, field
 from typing import Any, List, Tuple
 
-from backend.models.pokemon import Pokemon
-from backend.services.exp_service import award_exp
+from models.pokemon import Pokemon
+from services.exp_service import award_exp
 
 
 # -----------------------------

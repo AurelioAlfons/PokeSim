@@ -5,8 +5,8 @@ Kept separate so the API battle logic stays single-source in battle_service.py.
 """
 
 import random
-from backend.models.pokemon import Pokemon
-from backend.services.battle_service import take_turn, enemy_choose_move
+from models.pokemon import Pokemon
+from services.battle_service import take_turn, enemy_choose_move
 
 
 def run_battle(player: Pokemon, enemy: Pokemon) -> str:

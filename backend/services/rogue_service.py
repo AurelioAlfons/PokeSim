@@ -1,7 +1,7 @@
 # backend/services/rogue_service.py
 from __future__ import annotations
 from dataclasses import dataclass
-from backend.models.pokemon import Pokemon
+from models.pokemon import Pokemon
 
 
 def team_wiped(team: list[Pokemon]) -> bool:

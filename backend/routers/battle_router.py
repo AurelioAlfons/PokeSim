@@ -1,15 +1,15 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from backend.models.sample_team import SAMPLE_TEAM
-from backend.services.battle_service import BattleSession
-from backend.services.team_service import reset_team_full
-from backend.services.rogue_service import (
+from models.sample_team import SAMPLE_TEAM
+from services.battle_service import BattleSession
+from services.team_service import reset_team_full
+from services.rogue_service import (
     between_fight_heal,
     compute_wave_info,
     team_wiped,
 )
-from backend.services.wild_factory import make_wild
+from services.wild_factory import make_wild
 
 router = APIRouter()
 
