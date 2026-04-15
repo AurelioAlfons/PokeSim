@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.routers.battle_router import router as battle_router
+from routers.battle_router import router as battle_router
 
 app = FastAPI(title="PokeSim – Gen 4 Battle API")
 
