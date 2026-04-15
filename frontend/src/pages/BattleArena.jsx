@@ -4,18 +4,20 @@ import BattlePanel from "../components/BattlePanel";
 import PokemonSprite from "../components/PokemonSprite";
 
 export default function BattleArena() {
+  const API_URL = process.env.REACT_APP_API_URL;
+
   const [log, setLog] = useState(["Loading battle..."]);
   const [player, setPlayer] = useState(null);
   const [enemy, setEnemy] = useState(null);
   const [team, setTeam] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [panelMode, setPanelMode] = useState("main"); // main | moves | pokemon
-  const [forceSwitch, setForceSwitch] = useState(false); // 🔴 NEW
+  const [forceSwitch, setForceSwitch] = useState(false);
 
   useEffect(() => {
     const start = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:5000/battle/start", {
+        const res = await fetch(`${API_URL}/battle/start`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
         });
@@ -33,13 +35,13 @@ export default function BattleArena() {
       } catch (err) {
         setLog([
           "Could not connect to backend.",
-          "Make sure FastAPI is running on http://127.0.0.1:5000",
+          `Make sure backend is running at ${API_URL}`,
         ]);
       }
     };
 
     start();
-  }, []);
+  }, [API_URL]);
 
   const hpPct = (p) => {
     if (!p) return "0%";
@@ -57,7 +59,7 @@ export default function BattleArena() {
 
   const doRun = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:5000/battle/run", {
+      const res = await fetch(`${API_URL}/battle/run`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
@@ -81,7 +83,7 @@ export default function BattleArena() {
 
   const switchTo = async (index) => {
     try {
-      const res = await fetch("http://127.0.0.1:5000/battle/switch", {
+      const res = await fetch(`${API_URL}/battle/switch`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ index }),
@@ -107,7 +109,7 @@ export default function BattleArena() {
 
   const doMove = async (index) => {
     try {
-      const res = await fetch("http://127.0.0.1:5000/battle/move", {
+      const res = await fetch(`${API_URL}/battle/move`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ index }),
@@ -123,7 +125,6 @@ export default function BattleArena() {
 
       if (data.log?.length) setLog((p) => [...data.log, ...p]);
 
-      // 🔴 FORCE SWITCH if backend says active fainted
       if (data.message === "Active Pokémon fainted.") {
         setForceSwitch(true);
         setPanelMode("pokemon");
@@ -147,7 +148,6 @@ export default function BattleArena() {
       }}
     >
       <div style={{ width: "100%", maxWidth: 880 }}>
-        {/* Arena Box */}
         <div
           style={{
             height: 580,
@@ -162,7 +162,6 @@ export default function BattleArena() {
             boxShadow: "0 10px 0 rgba(0,0,0,0.85)",
           }}
         >
-          {/* Enemy HUD */}
           <div
             style={{
               position: "absolute",
@@ -199,7 +198,6 @@ export default function BattleArena() {
             </div>
           </div>
 
-          {/* Enemy sprite (consistent sizing) */}
           <div style={{ position: "absolute", top: 110, right: 90 }}>
             <PokemonSprite
               src={enemy?.sprite}
@@ -209,7 +207,6 @@ export default function BattleArena() {
             />
           </div>
 
-          {/* Player HUD */}
           <div
             style={{
               position: "absolute",
@@ -246,7 +243,6 @@ export default function BattleArena() {
               />
             </div>
 
-            {/* EXP Bar */}
             <div
               style={{
                 marginTop: 6,
@@ -270,7 +266,6 @@ export default function BattleArena() {
             </div>
           </div>
 
-          {/* Player sprite (consistent sizing) */}
           <div style={{ position: "absolute", bottom: 150, left: 100 }}>
             <PokemonSprite
               src={player?.sprite}
@@ -281,7 +276,6 @@ export default function BattleArena() {
           </div>
         </div>
 
-        {/* Bottom Panel */}
         <BattlePanel
           log={log}
           mode={panelMode}
