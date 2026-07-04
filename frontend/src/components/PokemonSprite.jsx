@@ -15,6 +15,7 @@ export default function PokemonSprite({
         display: "grid",
         placeItems: "center",
         opacity: 0.98,
+        overflow: "hidden",
         ...style,
       }}
     >
@@ -25,6 +26,8 @@ export default function PokemonSprite({
           style={{
             width: "100%",
             height: "100%",
+            minWidth: 0,
+            minHeight: 0,
             objectFit: "contain",
             imageRendering: "pixelated",
             transform: flip ? "scaleX(-1)" : "none",

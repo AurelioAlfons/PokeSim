@@ -141,8 +141,11 @@ function PokemonCard({ pokemon, disabled, onClick }) {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: 4,
+        justifyContent: "flex-start",
+        gap: 6,
         padding: 8,
+        minHeight: 172,
+        boxSizing: "border-box",
         borderRadius: 10,
         border: "3px solid rgba(0,0,0,0.85)",
         background: "#f7f7f7",
@@ -153,11 +156,29 @@ function PokemonCard({ pokemon, disabled, onClick }) {
         transition: "transform 120ms ease, box-shadow 120ms ease",
       }}
     >
-      <PokemonSprite src={pokemon.sprite} alt={pokemon.name} size={64} />
-      <div style={{ fontWeight: 800, fontSize: 13, textTransform: "capitalize" }}>
+      <PokemonSprite src={pokemon.sprite} alt={pokemon.name} size={84} />
+      <div
+        style={{
+          fontWeight: 800,
+          fontSize: 13,
+          textTransform: "capitalize",
+          width: "100%",
+          textAlign: "center",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+      >
         {pokemon.name}
       </div>
-      <div style={{ display: "flex", gap: 4 }}>
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "center",
+          gap: 3,
+        }}
+      >
         {pokemon.types.map((t) => (
           <TypeBadge key={t} type={t} size="sm" />
         ))}
@@ -168,8 +189,7 @@ function PokemonCard({ pokemon, disabled, onClick }) {
 
 const styles = {
   wrap: {
-    flex: 1,
-    minWidth: 0,
+    width: "100%",
     display: "flex",
     flexDirection: "column",
     gap: 12,
@@ -198,13 +218,15 @@ const styles = {
     borderRadius: 12,
     background: "rgba(255,255,255,0.9)",
     padding: 14,
-    height: 420,
+    height: 760,
     overflowY: "auto",
+    overflowX: "hidden",
   },
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(96px, 1fr))",
-    gap: 10,
+    gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))",
+    gap: 14,
+    alignItems: "start",
   },
   centerMsg: {
     height: "100%",

@@ -201,17 +201,17 @@ export default function Home() {
         style={{
           marginTop: 30,
           display: "flex",
-          gap: 40,
-          alignItems: "flex-start",
+          flexDirection: "column",
+          gap: 30,
         }}
       >
-        <PokemonPickerGrid onSelect={handleSelectFromGrid} teamFull={teamFull} />
-
         <TeamSlotsPanel
           slots={slots}
           onSlotClick={handleEditSlot}
           onRemove={handleRemoveSlot}
         />
+
+        <PokemonPickerGrid onSelect={handleSelectFromGrid} teamFull={teamFull} />
       </div>
 
       <SavedTeamsBar refreshToken={refreshToken} onLoad={handleLoadTeam} />

@@ -56,11 +56,22 @@ function FilledSlot({ slot, onClick, onRemove }) {
         ×
       </button>
       <PokemonSprite src={slot.sprite} alt={slot.name} size={56} />
-      <div style={{ fontWeight: 800, fontSize: 13, textTransform: "capitalize" }}>
+      <div
+        style={{
+          fontWeight: 800,
+          fontSize: 13,
+          textTransform: "capitalize",
+          width: "100%",
+          textAlign: "center",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+      >
         {slot.name}
       </div>
       <div style={{ fontSize: 11, opacity: 0.75 }}>Lv {slot.level}</div>
-      <div style={{ display: "flex", gap: 3 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 3 }}>
         {slot.types.map((t) => (
           <TypeBadge key={t} type={t} size="sm" />
         ))}
@@ -80,7 +91,8 @@ function EmptySlot() {
 
 const styles = {
   wrap: {
-    width: 360,
+    width: "100%",
+    boxSizing: "border-box",
     border: "2px solid black",
     borderRadius: 12,
     padding: 20,
@@ -89,7 +101,7 @@ const styles = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "baseline",
-    marginBottom: 12,
+    marginBottom: 14,
   },
   title: {
     fontSize: 22,
@@ -103,8 +115,8 @@ const styles = {
   },
   grid: {
     display: "grid",
-    gridTemplateColumns: "1fr 1fr 1fr",
-    gap: 10,
+    gridTemplateColumns: "repeat(6, 1fr)",
+    gap: 14,
     marginBottom: 16,
   },
   filledSlot: {
@@ -112,8 +124,11 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    gap: 2,
+    justifyContent: "flex-start",
+    gap: 5,
     padding: "10px 6px",
+    minHeight: 140,
+    boxSizing: "border-box",
     borderRadius: 10,
     border: "3px solid rgba(0,0,0,0.85)",
     background: "#f7f7f7",
@@ -142,7 +157,8 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     gap: 2,
-    height: 92,
+    minHeight: 140,
+    boxSizing: "border-box",
     borderRadius: 10,
     border: "2px dashed #cfcfcf",
   },
