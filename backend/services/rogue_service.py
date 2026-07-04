@@ -1,11 +1,17 @@
 # backend/services/rogue_service.py
 from __future__ import annotations
 from dataclasses import dataclass
+from typing import Optional
 from models.pokemon import Pokemon
 
 
 def team_wiped(team: list[Pokemon]) -> bool:
     return all(p.hp <= 0 for p in team)
+
+
+def next_alive(team: list[Pokemon]) -> Optional[Pokemon]:
+    """First non-fainted Pokemon in the team, or None if the team is wiped."""
+    return next((p for p in team if p.hp > 0), None)
 
 
 def between_fight_heal(team: list[Pokemon], percent: float = 0.15) -> None:

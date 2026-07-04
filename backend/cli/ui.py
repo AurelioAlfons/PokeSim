@@ -55,7 +55,9 @@ def green_hp_box(active: Pokemon, enemy: Pokemon):
 
 def format_action(result: dict) -> str:
     """Turn engine result into a printable string for CLI."""
-    if result["action"] == "heal":
+    action = result["action"]
+
+    if action == "heal":
         if result["healed"] == 0:
             return (
                 f"{result['user']} used {result['move_name']}! → HP is already full.\n"
@@ -66,9 +68,26 @@ def format_action(result: dict) -> str:
             f"{result['user']} HP: {result['user_hp']}/{result['user_max_hp']}\n"
         )
 
-    stab_text = " (STAB!)" if result.get("stab") else ""
+    if action == "status":
+        return f"{result['user']} used {result['move_name']}, but nothing happened.\n"
+
+    if action == "miss":
+        return f"{result['user']} used {result['move_name']}! → it missed!\n"
+
+    tags = []
+    if result.get("stab"):
+        tags.append("STAB!")
+    if result.get("crit"):
+        tags.append("Critical hit!")
+    eff = result.get("effectiveness", 1)
+    if eff > 1:
+        tags.append("Super effective!")
+    elif 0 < eff < 1:
+        tags.append("Not very effective...")
+    tag_text = f" ({' '.join(tags)})" if tags else ""
+
     return (
-        f"{result['user']} used {result['move_name']}!{stab_text} → {result['damage']} dmg\n"
+        f"{result['user']} used {result['move_name']}!{tag_text} → {result['damage']} dmg\n"
         f"{result['target']} HP: {result['target_hp']}/{result['target_max_hp']}\n"
     )
 
@@ -87,10 +106,10 @@ def choose_move(pokemon: Pokemon) -> Optional[dict]:
         move_type = m["type"]
         category = m["category"]
 
-        if category == "damage":
-            rows.append(f"{i}. {name:<10} | {move_type:<7} | {power:<3}")
-        else:
+        if category == "heal":
             rows.append(f"{i}. {name:<10} | HEAL    | {power:<3}")
+        else:
+            rows.append(f"{i}. {name:<10} | {move_type:<7} | {power:<3}")
 
     red_box(f"Choose a move for {pokemon.name}", rows)
     choice = input("\nEnter move number (or anything else to go back): ")

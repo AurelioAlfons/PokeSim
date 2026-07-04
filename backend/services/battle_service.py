@@ -4,7 +4,7 @@ Battle logic and mechanics (1v1 only)
 Handles:
 - Turn order (speed)
 - Damage + healing moves
-- STAB
+- Physical/special split, type effectiveness, accuracy, crits, STAB
 - One full turn for UI
 
 EXP:
@@ -13,38 +13,45 @@ EXP:
 Does NOT handle:
 - Endless rogue waves
 - Team progression logic
+- Status conditions (burn/paralysis/etc) - "status" category moves are a
+  no-op for now, just enough to not crash on real Gen4 movesets
 """
 
 import random
 from dataclasses import dataclass, field
-from typing import Any, List, Tuple
+from typing import Any, List, Optional, Tuple
 
+from data.type_chart import type_multiplier
 from models.pokemon import Pokemon
 from services.exp_service import award_exp
+
+CRIT_CHANCE = 1 / 16  # Gen 4 base critical hit rate
 
 
 # -----------------------------
 # Move helpers
 # -----------------------------
-def _normalize_move(move: Any) -> Tuple[str, int, str, str]:
+def _normalize_move(move: Any) -> Tuple[str, int, str, str, Optional[int]]:
     """
     Supports BOTH formats:
-    - dict: {"name": "...", "power": 40, "type": "fire", "category": "damage"}
+    - dict: {"name", "power", "type", "category", "accuracy"}
     - tuple/list: ("Ember", 40, "fire", "damage")
 
-    Returns: (name, power:int, move_type:str, category:str)
+    Returns: (name, power:int, move_type:str, category:str, accuracy:int|None)
+    accuracy=None means "always hits" (matches PokeAPI's convention).
     """
     if isinstance(move, dict):
         return (
             str(move.get("name", "Unknown")),
             int(move.get("power", 0) or 0),
             str(move.get("type", "normal")).lower(),
-            str(move.get("category", "damage")).lower(),
+            str(move.get("category", "physical")).lower(),
+            move.get("accuracy"),
         )
 
     if isinstance(move, (tuple, list)) and len(move) == 4:
         name, power, move_type, category = move
-        return str(name), int(power), str(move_type).lower(), str(category).lower()
+        return str(name), int(power), str(move_type).lower(), str(category).lower(), None
 
     raise TypeError(f"Unsupported move format: {move}")
 
@@ -52,28 +59,47 @@ def _normalize_move(move: Any) -> Tuple[str, int, str, str]:
 # -----------------------------
 # Damage
 # -----------------------------
-def damage_calc(attacker: Pokemon, defender: Pokemon, power: int, move_type: str) -> Tuple[int, bool]:
-    """Basic damage calc with STAB."""
-    lvl = (2 * attacker.level) / 5 + 2
-    defense = max(1, defender.defense)
+def damage_calc(attacker: Pokemon, defender: Pokemon, power: int, move_type: str, category: str) -> dict:
+    """
+    Gen 4-style damage calc: physical/special split, type effectiveness,
+    STAB, crit chance, and +-15% random variance.
+    """
+    if category == "special":
+        atk, defn = attacker.sp_attack, max(1, defender.sp_defense)
+    else:
+        atk, defn = attacker.attack, max(1, defender.defense)
 
-    base = (lvl * attacker.attack * power) / defense
-    damage = int(base / 50) + 2
+    effectiveness = type_multiplier(move_type, defender.types)
+    if effectiveness == 0:
+        return {"damage": 0, "stab": False, "effectiveness": 0, "crit": False}
 
     stab = move_type in attacker.types
-    if stab:
-        damage = int(damage * 1.5)
+    crit = random.random() < CRIT_CHANCE
 
-    return max(damage, 1), stab
+    lvl = (2 * attacker.level) / 5 + 2
+    base = (lvl * atk * power) / defn
+    damage = base / 50 + 2
+
+    damage *= 1.5 if stab else 1.0
+    damage *= effectiveness
+    damage *= 2.0 if crit else 1.0
+    damage *= random.uniform(0.85, 1.0)
+
+    return {
+        "damage": max(1, int(damage)),
+        "stab": stab,
+        "effectiveness": effectiveness,
+        "crit": crit,
+    }
 
 
 # -----------------------------
 # Execute a move
 # -----------------------------
 def take_turn(attacker: Pokemon, defender: Pokemon, move: Any) -> dict:
-    name, power, move_type, category = _normalize_move(move)
+    name, power, move_type, category, accuracy = _normalize_move(move)
 
-    # Healing move
+    # Healing move (flat HP restore, kept simple - not a real status effect)
     if category == "heal":
         old_hp = attacker.hp
         attacker.hp = min(attacker.hp + power, attacker.max_hp)
@@ -82,18 +108,41 @@ def take_turn(attacker: Pokemon, defender: Pokemon, move: Any) -> dict:
             "user": attacker.name,
             "move_name": name,
             "healed": attacker.hp - old_hp,
+            "user_hp": attacker.hp,
+            "user_max_hp": attacker.max_hp,
         }
 
-    # Damage move (default)
-    dmg, stab = damage_calc(attacker, defender, power, move_type)
-    defender.hp = max(defender.hp - dmg, 0)
+    # Status moves aren't simulated yet - just acknowledge and move on
+    if category == "status":
+        return {
+            "action": "status",
+            "user": attacker.name,
+            "move_name": name,
+        }
+
+    # Accuracy check (None = always hits)
+    if accuracy is not None and random.uniform(0, 100) > accuracy:
+        return {
+            "action": "miss",
+            "user": attacker.name,
+            "move_name": name,
+        }
+
+    # Damage move (physical/special)
+    result = damage_calc(attacker, defender, power, move_type, category)
+    defender.hp = max(defender.hp - result["damage"], 0)
 
     return {
         "action": "damage",
         "user": attacker.name,
         "move_name": name,
-        "damage": dmg,
-        "stab": stab,
+        "damage": result["damage"],
+        "stab": result["stab"],
+        "effectiveness": result["effectiveness"],
+        "crit": result["crit"],
+        "target": defender.name,
+        "target_hp": defender.hp,
+        "target_max_hp": defender.max_hp,
     }
 
 
@@ -113,6 +162,8 @@ class BattleSession:
     active_index: int
     enemy: Pokemon
     log: List[str] = field(default_factory=list)
+    team_id: Any = "sample"
+    team_name: str = "Sample Team"
 
     def player(self) -> Pokemon:
         return self.team[self.active_index]
@@ -205,9 +256,24 @@ class BattleSession:
     # -----------------------------
     def _do_action(self, attacker: Pokemon, defender: Pokemon, move: Any) -> None:
         res = take_turn(attacker, defender, move)
+        action = res["action"]
 
-        if res["action"] == "heal":
+        if action == "heal":
             self.log.append(f"{res['user']} used {res['move_name']} → healed {res['healed']} HP")
+        elif action == "status":
+            self.log.append(f"{res['user']} used {res['move_name']}, but nothing happened.")
+        elif action == "miss":
+            self.log.append(f"{res['user']} used {res['move_name']} → it missed!")
         else:
-            stab_txt = " (STAB!)" if res.get("stab") else ""
-            self.log.append(f"{res['user']} used {res['move_name']}{stab_txt} → {res['damage']} dmg")
+            tags = []
+            if res.get("stab"):
+                tags.append("STAB!")
+            if res.get("crit"):
+                tags.append("Critical hit!")
+            eff = res.get("effectiveness", 1)
+            if eff > 1:
+                tags.append("Super effective!")
+            elif 0 < eff < 1:
+                tags.append("Not very effective...")
+            tag_txt = f" ({' '.join(tags)})" if tags else ""
+            self.log.append(f"{res['user']} used {res['move_name']}{tag_txt} → {res['damage']} dmg")

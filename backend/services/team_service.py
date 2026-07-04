@@ -16,8 +16,4 @@ def reset_team_full(team: List[Pokemon]) -> None:
     """
     for p in team:
         p.hp = p.max_hp
-
-        if hasattr(p, "exp"):
-            p.exp = 0
-        if hasattr(p, "exp_to_next_level"):
-            p.exp_to_next_level = getattr(p, "exp_to_next_level", 0)
+        p.reset_exp()

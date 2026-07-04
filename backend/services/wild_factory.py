@@ -2,63 +2,30 @@
 from __future__ import annotations
 
 import random
+
 from models.pokemon import Pokemon
+from services.pokedex_service import GEN4_DEX_RANGE, get_detail
 
 
 def make_wild(level: int) -> Pokemon:
-    pool = [
-        # -----------------------------
-        # Staraptor
-        # -----------------------------
-        (
-            "Staraptor",
-            398,
-            ["normal", "flying"],
-            {"hp": 85, "atk": 120, "def": 70, "spd": 100},
-            [
-                {"name": "Brave Bird", "power": 120, "type": "flying", "category": "damage"},
-                {"name": "Close Combat", "power": 120, "type": "fighting", "category": "damage"},
-                {"name": "Quick Attack", "power": 40, "type": "normal", "category": "damage"},
-            ],
-        ),
+    """Builds a random wild Pokemon from the full Gen 4 dex via PokeAPI."""
+    dex_id = random.choice(GEN4_DEX_RANGE)
+    data = get_detail(dex_id)
 
-        # -----------------------------
-        # Lucario
-        # -----------------------------
-        (
-            "Lucario",
-            448,
-            ["fighting", "steel"],
-            {"hp": 70, "atk": 110, "def": 70, "spd": 90},
-            [
-                {"name": "Aura Sphere", "power": 80, "type": "fighting", "category": "damage"},
-                {"name": "Flash Cannon", "power": 80, "type": "steel", "category": "damage"},
-                {"name": "Extreme Speed", "power": 80, "type": "normal", "category": "damage"},
-            ],
-        ),
+    # Only moves the Pokemon has actually learned by this level, newest first
+    learned = [m for m in data["moves"] if m["level_learned_at"] <= level]
+    if not learned:
+        learned = data["moves"][:1]  # fall back to its earliest move
+    moves = learned[-4:]
 
-        # -----------------------------
-        # Garchomp
-        # -----------------------------
-        (
-            "Garchomp",
-            445,
-            ["dragon", "ground"],
-            {"hp": 108, "atk": 130, "def": 95, "spd": 102},
-            [
-                {"name": "Dragon Claw", "power": 80, "type": "dragon", "category": "damage"},
-                {"name": "Earthquake", "power": 100, "type": "ground", "category": "damage"},
-                {"name": "Crunch", "power": 80, "type": "dark", "category": "damage"},
-            ],
-        ),
-    ]
+    ability = random.choice(data["abilities"])["name"]
 
-    name, dex, types, stats, moves = random.choice(pool)
     return Pokemon(
-        pokedex_id=dex,
-        name=name,
+        pokedex_id=data["id"],
+        name=data["name"].title(),
         level=level,
-        types=types,
-        base_stats=stats,
+        types=data["types"],
+        base_stats=data["base_stats"],
         moves=moves,
+        ability=ability,
     )

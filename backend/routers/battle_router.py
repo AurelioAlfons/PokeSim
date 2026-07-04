@@ -1,7 +1,10 @@
-from fastapi import APIRouter
+from typing import Optional
+
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from models.sample_team import SAMPLE_TEAM
+from services import team_repository
 from services.battle_service import BattleSession
 from services.team_service import reset_team_full
 from services.rogue_service import (
@@ -28,35 +31,35 @@ class MoveRequest(BaseModel):
     index: int
 
 
+class StartRequest(BaseModel):
+    team_id: Optional[int] = None
+
+
 # -----------------------------
 # Helpers
 # -----------------------------
 def _poke_to_dict(p):
+    return p.to_dict()
+
+
+def _team_payload(session: BattleSession):
     return {
-        "id": p.id,
-        "name": p.name,
-        "level": p.level,
-        "types": p.types,
-        "ability": p.ability,
-        "hp": p.hp,
-        "max_hp": p.max_hp,
-        "attack": p.attack,
-        "defense": p.defense,
-        "speed": p.speed,
-        "moves": p.moves,
-        "sprite": p.sprite,
-        "exp": getattr(p, "exp", 0),
-        "exp_to_next_level": getattr(p, "exp_to_next_level", 0),
+        "id": session.team_id,
+        "name": session.team_name,
+        "pokemon": [_poke_to_dict(x) for x in session.team],
     }
 
 
-def _team_payload(team):
-    # DB-ready: this payload is based on the session team, not SAMPLE_TEAM
-    return {
-        "id": getattr(SAMPLE_TEAM, "id", "sample"),   # placeholder until DB team
-        "name": getattr(SAMPLE_TEAM, "name", "Sample Team"),
-        "pokemon": [_poke_to_dict(x) for x in team],
-    }
+def _load_team(team_id: Optional[int]):
+    """Returns (pokemon_list, team_name, team_id) for a fresh session."""
+    if team_id is not None:
+        saved = team_repository.get_team(team_id)
+        if saved is None:
+            raise HTTPException(status_code=404, detail="Team not found")
+        return saved["pokemon"], saved["name"], saved["id"]
+
+    reset_team_full(SAMPLE_TEAM.pokemon)
+    return SAMPLE_TEAM.pokemon, SAMPLE_TEAM.name, SAMPLE_TEAM.id
 
 
 def _spawn_enemy_for_wave(session: BattleSession, wave: int):
@@ -69,22 +72,22 @@ def _spawn_enemy_for_wave(session: BattleSession, wave: int):
     return info
 
 
-def _new_session(*, wave: int, log: list[str] | None = None) -> BattleSession:
+def _new_session(*, wave: int, team_id: Optional[int] = None, log: list[str] | None = None) -> BattleSession:
     """
     Creates a fresh session:
-    - resets team hp/exp/etc (later this should reset only in-memory session team)
+    - loads the requested team (or falls back to SAMPLE_TEAM)
     - spawns wave-scaled enemy
     - adds standard intro log
     """
-    # For now we reset the sample team in-place.
-    # Later: when team comes from DB, you'll build a fresh team list for the session.
-    reset_team_full(SAMPLE_TEAM.pokemon)
+    team, team_name, team_ref = _load_team(team_id)
 
     session = BattleSession(
-        team=SAMPLE_TEAM.pokemon,
+        team=team,
         active_index=0,
         enemy=make_wild(level=1),  # placeholder, overwritten below
         log=log or [],
+        team_id=team_ref,
+        team_name=team_name,
     )
 
     _spawn_enemy_for_wave(session, wave)
@@ -115,7 +118,7 @@ def _state_response(session: BattleSession, ok: bool = True, message: str | None
         "active_index": session.active_index,
         "player": _poke_to_dict(session.player()),
         "enemy": _poke_to_dict(session.enemy),
-        "team": _team_payload(session.team),
+        "team": _team_payload(session),
         "log": session.log,
         "wave": WAVE,
     }
@@ -128,10 +131,10 @@ def _state_response(session: BattleSession, ok: bool = True, message: str | None
 # Routes
 # -----------------------------
 @router.post("/start")
-def start_battle():
+def start_battle(body: StartRequest = StartRequest()):
     global SESSION, WAVE
     WAVE = 1
-    SESSION = _new_session(wave=WAVE, log=[])
+    SESSION = _new_session(wave=WAVE, team_id=body.team_id, log=[])
     return _state_response(SESSION, ok=True)
 
 
@@ -140,12 +143,13 @@ def run_away():
     """
     Run = full reset:
     - wave -> 1
-    - team reset
+    - team reset (keeps whichever team the session was already using)
     - new wild Pokémon (using wave scaling)
     """
     global SESSION, WAVE
+    prev_team_id = SESSION.team_id if SESSION and isinstance(SESSION.team_id, int) else None
     WAVE = 1
-    SESSION = _new_session(wave=WAVE, log=["You ran away!"])
+    SESSION = _new_session(wave=WAVE, team_id=prev_team_id, log=["You ran away!"])
     return _state_response(SESSION, ok=True)
 
 
