@@ -88,6 +88,18 @@ export default function Home() {
     setSlots((prev) => prev.map((s, i) => (i === index ? null : s)));
   };
 
+  const handleDropOnSlot = (targetIndex, payload) => {
+    if (payload.source === "grid") {
+      setEditing({ slotIndex: targetIndex, pokedexId: payload.pokedexId, initial: null });
+    } else if (payload.source === "slot" && payload.fromIndex !== targetIndex) {
+      setSlots((prev) => {
+        const next = [...prev];
+        [next[targetIndex], next[payload.fromIndex]] = [next[payload.fromIndex], next[targetIndex]];
+        return next;
+      });
+    }
+  };
+
   const handleModalConfirm = (slotData) => {
     setSlots((prev) => {
       const next = [...prev];
@@ -209,6 +221,7 @@ export default function Home() {
           slots={slots}
           onSlotClick={handleEditSlot}
           onRemove={handleRemoveSlot}
+          onDropOnSlot={handleDropOnSlot}
         />
 
         <PokemonPickerGrid onSelect={handleSelectFromGrid} teamFull={teamFull} />

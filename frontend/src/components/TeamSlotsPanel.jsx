@@ -1,9 +1,9 @@
 // src/components/TeamSlotsPanel.jsx
-import React from "react";
+import React, { useState } from "react";
 import PokemonSprite from "./PokemonSprite";
 import TypeBadge from "./TypeBadge";
 
-export default function TeamSlotsPanel({ slots, onSlotClick, onRemove }) {
+export default function TeamSlotsPanel({ slots, onSlotClick, onRemove, onDropOnSlot }) {
   const filledCount = slots.filter(Boolean).length;
 
   return (
@@ -18,15 +18,17 @@ export default function TeamSlotsPanel({ slots, onSlotClick, onRemove }) {
           slot ? (
             <FilledSlot
               key={i}
+              index={i}
               slot={slot}
               onClick={() => onSlotClick(i)}
               onRemove={(e) => {
                 e.stopPropagation();
                 onRemove(i);
               }}
+              onDropOnSlot={onDropOnSlot}
             />
           ) : (
-            <EmptySlot key={i} />
+            <EmptySlot key={i} index={i} onDropOnSlot={onDropOnSlot} />
           )
         )}
       </div>
@@ -41,7 +43,9 @@ export default function TeamSlotsPanel({ slots, onSlotClick, onRemove }) {
   );
 }
 
-function FilledSlot({ slot, onClick, onRemove }) {
+function FilledSlot({ index, slot, onClick, onRemove, onDropOnSlot }) {
+  const [isDragOver, setIsDragOver] = useState(false);
+
   return (
     <div
       role="button"
@@ -50,7 +54,25 @@ function FilledSlot({ slot, onClick, onRemove }) {
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") onClick();
       }}
-      style={styles.filledSlot}
+      draggable
+      onDragStart={(e) =>
+        e.dataTransfer.setData(
+          "application/json",
+          JSON.stringify({ source: "slot", fromIndex: index })
+        )
+      }
+      onDragOver={(e) => {
+        e.preventDefault();
+        setIsDragOver(true);
+      }}
+      onDragLeave={() => setIsDragOver(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setIsDragOver(false);
+        const payload = JSON.parse(e.dataTransfer.getData("application/json"));
+        onDropOnSlot(index, payload);
+      }}
+      style={{ ...styles.filledSlot, ...(isDragOver ? styles.dragOver : {}) }}
     >
       <button style={styles.removeBtn} onClick={onRemove} title="Remove">
         ×
@@ -80,9 +102,24 @@ function FilledSlot({ slot, onClick, onRemove }) {
   );
 }
 
-function EmptySlot() {
+function EmptySlot({ index, onDropOnSlot }) {
+  const [isDragOver, setIsDragOver] = useState(false);
+
   return (
-    <div style={styles.emptySlot}>
+    <div
+      onDragOver={(e) => {
+        e.preventDefault();
+        setIsDragOver(true);
+      }}
+      onDragLeave={() => setIsDragOver(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setIsDragOver(false);
+        const payload = JSON.parse(e.dataTransfer.getData("application/json"));
+        onDropOnSlot(index, payload);
+      }}
+      style={{ ...styles.emptySlot, ...(isDragOver ? styles.dragOver : {}) }}
+    >
       <span style={{ fontSize: 24, color: "#bbb" }}>+</span>
       <span style={{ fontSize: 11, color: "#999", fontWeight: 700 }}>Empty</span>
     </div>
@@ -161,6 +198,10 @@ const styles = {
     boxSizing: "border-box",
     borderRadius: 10,
     border: "2px dashed #cfcfcf",
+  },
+  dragOver: {
+    border: "2px dashed #f7e733",
+    background: "#fffbe0",
   },
   tip: {
     background: "#eef5ff",

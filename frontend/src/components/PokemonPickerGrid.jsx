@@ -135,6 +135,13 @@ function PokemonCard({ pokemon, disabled, onClick }) {
     <button
       onClick={onClick}
       disabled={disabled}
+      draggable={!disabled}
+      onDragStart={(e) =>
+        e.dataTransfer.setData(
+          "application/json",
+          JSON.stringify({ source: "grid", pokedexId: pokemon.id })
+        )
+      }
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
