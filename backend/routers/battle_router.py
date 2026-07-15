@@ -4,7 +4,6 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from models.sample_team import SAMPLE_TEAM
-from services import team_repository
 from services.battle_service import BattleSession
 from services.team_service import reset_team_full
 from services.rogue_service import (
@@ -51,13 +50,9 @@ def _team_payload(session: BattleSession):
 
 
 def _load_team(team_id: Optional[int]):
-    """Returns (pokemon_list, team_name, team_id) for a fresh session."""
-    if team_id is not None:
-        saved = team_repository.get_team(team_id)
-        if saved is None:
-            raise HTTPException(status_code=404, detail="Team not found")
-        return saved["pokemon"], saved["name"], saved["id"]
-
+    # saved teams live in supabase now, backend can't look them up anymore -
+    # always hand back the sample team, same as what actually happens today
+    # since the frontend never sends a team_id anyway
     reset_team_full(SAMPLE_TEAM.pokemon)
     return SAMPLE_TEAM.pokemon, SAMPLE_TEAM.name, SAMPLE_TEAM.id
 

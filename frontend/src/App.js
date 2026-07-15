@@ -1,10 +1,15 @@
 // src/App.js
 import React from "react";
 import { Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Challenge from "./pages/Challenge";
 import BattleArena from "./pages/BattleArena";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 function App() {
   const angle = "135deg";
@@ -40,13 +45,19 @@ function App() {
         padding: `${padTop}px ${padX}px ${padBottom}px`,
       }}
     >
-      <Navbar />
+      <AuthProvider>
+        <Navbar />
 
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/challenge" element={<Challenge />} />
-        <Route path="/battle" element={<BattleArena />} />
-      </Routes>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/challenge" element={<Challenge />} />
+          <Route path="/battle" element={<BattleArena />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+        </Routes>
+      </AuthProvider>
     </div>
   );
 }

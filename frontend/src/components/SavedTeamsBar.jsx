@@ -2,8 +2,10 @@
 import React, { useEffect, useState } from "react";
 import { fetchTeams, fetchTeam, deleteTeam } from "../api/teams";
 import SavedTeamViewModal from "./SavedTeamViewModal";
+import { useAuth } from "../context/AuthContext";
 
 export default function SavedTeamsBar({ refreshToken, onLoad }) {
+  const { user } = useAuth();
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState(null);
@@ -19,9 +21,15 @@ export default function SavedTeamsBar({ refreshToken, onLoad }) {
   };
 
   useEffect(() => {
+    // logged out -> nothing to fetch, RLS would just hand back an empty list anyway
+    if (!user) {
+      setTeams([]);
+      setLoading(false);
+      return;
+    }
     refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [refreshToken]);
+  }, [refreshToken, user]);
 
   const handleLoad = async (id) => {
     setBusyId(id);
@@ -65,7 +73,9 @@ export default function SavedTeamsBar({ refreshToken, onLoad }) {
       >
         <div style={styles.title}>Saved Teams</div>
 
-        {loading ? (
+        {!user ? (
+          <div style={styles.muted}>Log in to see your saved teams.</div>
+        ) : loading ? (
           <div style={styles.muted}>Loading...</div>
         ) : teams.length === 0 ? (
           <div style={styles.muted}>No saved teams yet — build one and hit Save Team!</div>

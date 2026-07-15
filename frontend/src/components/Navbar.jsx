@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout } = useAuth();
 
   const isBuilder = location.pathname === "/" || location.pathname === "/builder";
   const isBattle =
@@ -131,6 +133,18 @@ export default function Navbar() {
       transition: "all 0.15s ease",
     },
 
+    rightGroup: {
+      display: "flex",
+      alignItems: "center",
+      gap: 14,
+    },
+
+    userEmail: {
+      color: "#f7e733",
+      fontWeight: 700,
+      fontSize: 15,
+    },
+
     divider: {
       position: "relative",
       left: "50%",
@@ -202,17 +216,34 @@ export default function Navbar() {
         </div>
 
         {/* RIGHT */}
-        <button
-          style={styles.loginBtn}
-          onClick={() => navigate("/login")}
-          onMouseEnter={invertHoverOn}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "#f7e733";
-            e.currentTarget.style.color = "#111";
-          }}
-        >
-          Login
-        </button>
+        {user ? (
+          <div style={styles.rightGroup}>
+            <span style={styles.userEmail}>{user.email}</span>
+            <button
+              style={styles.loginBtn}
+              onClick={logout}
+              onMouseEnter={invertHoverOn}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "#f7e733";
+                e.currentTarget.style.color = "#111";
+              }}
+            >
+              Logout
+            </button>
+          </div>
+        ) : (
+          <button
+            style={styles.loginBtn}
+            onClick={() => navigate("/login")}
+            onMouseEnter={invertHoverOn}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "#f7e733";
+              e.currentTarget.style.color = "#111";
+            }}
+          >
+            Login
+          </button>
+        )}
       </div>
 
       {/* DIVIDER */}

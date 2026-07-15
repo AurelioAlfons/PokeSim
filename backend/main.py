@@ -1,17 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from db import init_db
 from routers.battle_router import router as battle_router
 from routers.pokedex_router import router as pokedex_router
-from routers.teams_router import router as teams_router
 
 app = FastAPI(title="PokeSim – Gen 4 Battle API")
-
-
-@app.on_event("startup")
-def _startup():
-    init_db()
 
 # allow local frontend ports for now
 app.add_middleware(
@@ -39,7 +32,6 @@ def health():
 
 app.include_router(battle_router, prefix="/battle", tags=["battle"])
 app.include_router(pokedex_router, prefix="/pokedex", tags=["pokedex"])
-app.include_router(teams_router, prefix="/teams", tags=["teams"])
 
 # optional local manual run
 # if __name__ == "__main__":

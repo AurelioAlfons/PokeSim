@@ -1,5 +1,6 @@
 // src/pages/Home.jsx
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import TeamHeader from "../components/TeamHeader";
 import PokemonPickerGrid from "../components/PokemonPickerGrid";
 import PokemonDetailModal from "../components/PokemonDetailModal";
@@ -8,10 +9,13 @@ import SavedTeamsBar from "../components/SavedTeamsBar";
 import { createTeam, updateTeam } from "../api/teams";
 import { fetchPokemonDetail } from "../api/pokedex";
 import { buildDefaultSlotData } from "../utils/pokemonDefaults";
+import { useAuth } from "../context/AuthContext";
 
 const EMPTY_SLOTS = () => Array(6).fill(null);
 
 export default function Home() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   // divider logic
   const dividerRef = useRef(null);
   const [splitX, setSplitX] = useState("50%");
@@ -145,6 +149,11 @@ export default function Home() {
   };
 
   const handleSave = async () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
     const filled = slots.filter(Boolean);
     if (filled.length === 0) {
       setSaveStatus({ type: "error", text: "Add at least one Pokemon before saving." });
