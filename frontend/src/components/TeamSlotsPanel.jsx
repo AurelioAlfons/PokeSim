@@ -133,6 +133,11 @@ const styles = {
     border: "2px solid black",
     borderRadius: 12,
     padding: 20,
+    position: "sticky",
+    top: 20,
+    zIndex: 10,
+    background: "#fff",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
   },
   headerRow: {
     display: "flex",
