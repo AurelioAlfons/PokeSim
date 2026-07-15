@@ -16,7 +16,7 @@
 
 ---
 
-This repo is my attempt at creating a small Pokémon battle simulator that focuses on **Gen 4 Pokémon only** at the beginning.  
+This repo is my attempt at creating a small Pokémon battle simulator that focuses on **Gen 4 Pokémon only** at the beginning. Since then, it has grown into a full team builder with account-based saved teams, though Gen 4 is still the only generation supported.  
 
 ---
 
@@ -35,6 +35,7 @@ This repo is my attempt at creating a small Pokémon battle simulator that focus
 
 - **Frontend:** React (Create React App)  
 - **Backend:** Python + FastAPI  
+- **Database & Auth:** Supabase (Postgres + Row Level Security for per-account data isolation)  
 - **API:** REST API (JSON requests & responses)  
 - **Hosting:**  
   - Vercel (frontend)  
@@ -43,6 +44,17 @@ This repo is my attempt at creating a small Pokémon battle simulator that focus
 ---
 
 ## <img src="assets/SVG/395.svg" width="70" /> Core Features
+
+- **Pokedex & Team Builder:**
+  - Browse, search, and filter all 107 Gen 4 Pokémon  
+  - Drag and drop to assemble a team, reorder, or swap slots  
+  - Configure nickname, level, ability, and moveset per Pokémon  
+
+- **Saved Teams & Accounts:**
+  - Register and log in  
+  - Save, load, and edit teams privately per account  
+  - Row Level Security (Supabase) ensures only you can see or touch your own saved teams  
+  - Password reset  
 
 - **Battle System:**
   - Turn-based battle flow  
@@ -77,7 +89,8 @@ This repo is my attempt at creating a small Pokémon battle simulator that focus
 - Frontend connected to live backend  
 - Battle system fully working (start, move, switch, run)  
 - Rogue mode implemented with scaling enemies  
-- Basic UI working with battle panel and sprites  
+- Full Gen 4 Pokedex live, with a Team Builder supporting drag-and-drop assembly  
+- Saved Teams and accounts live, backed by Supabase with Row Level Security  
 
 ---
 
@@ -85,8 +98,7 @@ This repo is my attempt at creating a small Pokémon battle simulator that focus
 
 - Expand to more Pokémon generations  
 - Add more move effects + status conditions  
-- Save teams (database later)  
-- Better UI + animations  
+- More UI polish and animation, building on the drag-and-drop Team Builder  
 - Multiplayer / PvP mode  
 
 ---
