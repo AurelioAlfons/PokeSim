@@ -6,6 +6,8 @@ import PokemonDetailModal from "../components/PokemonDetailModal";
 import TeamSlotsPanel from "../components/TeamSlotsPanel";
 import SavedTeamsBar from "../components/SavedTeamsBar";
 import { createTeam } from "../api/teams";
+import { fetchPokemonDetail } from "../api/pokedex";
+import { buildDefaultSlotData } from "../utils/pokemonDefaults";
 
 const EMPTY_SLOTS = () => Array(6).fill(null);
 
@@ -90,7 +92,17 @@ export default function Home() {
 
   const handleDropOnSlot = (targetIndex, payload) => {
     if (payload.source === "grid") {
-      setEditing({ slotIndex: targetIndex, pokedexId: payload.pokedexId, initial: null });
+      // drag-drop is meant to be instant, no popup - land it with sensible
+      // defaults, tap the slot afterward to open the panel and tweak it
+      fetchPokemonDetail(payload.pokedexId)
+        .then((detail) => {
+          setSlots((prev) => {
+            const next = [...prev];
+            next[targetIndex] = buildDefaultSlotData(detail);
+            return next;
+          });
+        })
+        .catch((err) => console.error("Failed to drop Pokemon:", err));
     } else if (payload.source === "slot" && payload.fromIndex !== targetIndex) {
       setSlots((prev) => {
         const next = [...prev];

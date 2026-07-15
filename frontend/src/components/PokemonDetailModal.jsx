@@ -3,21 +3,7 @@ import React, { useEffect, useState } from "react";
 import PokemonSprite from "./PokemonSprite";
 import TypeBadge from "./TypeBadge";
 import { fetchPokemonDetail } from "../api/pokedex";
-
-function titleCase(s = "") {
-  return s.replace(/(^|-)([a-z])/g, (_, sep, c) => (sep ? " " : "") + c.toUpperCase());
-}
-
-function pickDefaultMoves(moves, level) {
-  const learnable = moves.filter((m) => m.level_learned_at <= level);
-  const pool = learnable.length ? learnable : moves;
-  const chosen = pool.slice(-4);
-  const slots = [null, null, null, null];
-  chosen.forEach((m, i) => {
-    slots[i] = m;
-  });
-  return slots;
-}
+import { titleCase, pickDefaultMoves } from "../utils/pokemonDefaults";
 
 export default function PokemonDetailModal({ open, pokedexId, initial, onConfirm, onClose }) {
   const [detail, setDetail] = useState(null);
