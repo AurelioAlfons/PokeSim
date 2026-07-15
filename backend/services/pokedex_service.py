@@ -1,17 +1,25 @@
 # backend/services/pokedex_service.py
 #
-# Shapes raw PokeAPI data into what the rest of PokeSim actually needs.
-# Scoped to Gen 4 (National Dex #387 Turtwig - #493 Arceus) since that's
-# what this project covers and what we have sprites for.
+# Gen 4 dex data (National Dex #387 Turtwig - #493 Arceus) is fully static,
+# so we don't hit PokeAPI at request time at all - gen4_dex.json is a
+# one-time snapshot built by scripts/build_gen4_dex.py, and this just reads
+# it off disk. list_summary/get_detail below are dumb lookups, no reshaping.
 
-from services.pokeapi_client import get_pokemon, get_move
+import json
+import os
+
+from services.pokeapi_client import get_move
+
+# Which games' level-up lists we care about. Kept here since
+# build_gen4_dex.py imports _level_up_moves() from this module.
+VERSION_GROUP = "platinum"
 
 GEN4_DEX_RANGE = range(387, 494)
 
-# Which games' level-up lists we care about. Keeping this to one version
-# group is enough for a Gen 4 team builder without pulling in every TM/egg
-# move too.
-VERSION_GROUP = "platinum"
+_DEX_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "gen4_dex.json")
+with open(_DEX_PATH, encoding="utf-8") as f:
+    _DEX = json.load(f)
+_DEX_BY_ID = {entry["id"]: entry for entry in _DEX}
 
 
 def _sprite_path(dex_id: int) -> str:
@@ -20,16 +28,15 @@ def _sprite_path(dex_id: int) -> str:
 
 def list_summary() -> list:
     """Lightweight list for browsing the dex (team builder grid)."""
-    out = []
-    for dex_id in GEN4_DEX_RANGE:
-        data = get_pokemon(dex_id)
-        out.append({
-            "id": dex_id,
-            "name": data["name"],
-            "types": [t["type"]["name"] for t in data["types"]],
-            "sprite": _sprite_path(dex_id),
-        })
-    return out
+    return [
+        {
+            "id": entry["id"],
+            "name": entry["name"],
+            "types": entry["types"],
+            "sprite": entry["sprite"],
+        }
+        for entry in _DEX
+    ]
 
 
 def _level_up_moves(data: dict) -> list:
@@ -61,25 +68,4 @@ def _level_up_moves(data: dict) -> list:
 
 def get_detail(dex_id: int) -> dict:
     """Full detail for one Pokemon: stats, types, abilities, level-up moves."""
-    data = get_pokemon(dex_id)
-    stats = {s["stat"]["name"]: s["base_stat"] for s in data["stats"]}
-
-    return {
-        "id": dex_id,
-        "name": data["name"],
-        "types": [t["type"]["name"] for t in data["types"]],
-        "sprite": _sprite_path(dex_id),
-        "base_stats": {
-            "hp": stats["hp"],
-            "atk": stats["attack"],
-            "def": stats["defense"],
-            "spatk": stats["special-attack"],
-            "spdef": stats["special-defense"],
-            "spd": stats["speed"],
-        },
-        "abilities": [
-            {"name": a["ability"]["name"], "hidden": a["is_hidden"]}
-            for a in data["abilities"]
-        ],
-        "moves": _level_up_moves(data),
-    }
+    return _DEX_BY_ID[dex_id]
