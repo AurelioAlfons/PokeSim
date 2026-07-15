@@ -56,6 +56,18 @@ def get_team(team_id: int):
     }
 
 
+@router.put("/{team_id}")
+def update_team(team_id: int, body: TeamIn):
+    ok = team_repository.update_team(
+        team_id,
+        body.name,
+        [m.model_dump() for m in body.pokemon],
+    )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Team not found")
+    return {"ok": True}
+
+
 @router.delete("/{team_id}")
 def delete_team(team_id: int):
     if not team_repository.delete_team(team_id):

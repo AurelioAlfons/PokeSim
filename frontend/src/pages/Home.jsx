@@ -5,7 +5,7 @@ import PokemonPickerGrid from "../components/PokemonPickerGrid";
 import PokemonDetailModal from "../components/PokemonDetailModal";
 import TeamSlotsPanel from "../components/TeamSlotsPanel";
 import SavedTeamsBar from "../components/SavedTeamsBar";
-import { createTeam } from "../api/teams";
+import { createTeam, updateTeam } from "../api/teams";
 import { fetchPokemonDetail } from "../api/pokedex";
 import { buildDefaultSlotData } from "../utils/pokemonDefaults";
 
@@ -55,6 +55,7 @@ export default function Home() {
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null); // { type: 'success' | 'error', text }
   const [refreshToken, setRefreshToken] = useState(0);
+  const [loadedTeamId, setLoadedTeamId] = useState(null);
 
   const teamFull = slots.every(Boolean);
 
@@ -63,6 +64,7 @@ export default function Home() {
     setDescription("");
     setSlots(EMPTY_SLOTS());
     setSaveStatus(null);
+    setLoadedTeamId(null);
   };
 
   const handleSelectFromGrid = (summary) => {
@@ -139,6 +141,7 @@ export default function Home() {
     setDescription("");
     setSlots(newSlots);
     setSaveStatus(null);
+    setLoadedTeamId(team.id);
   };
 
   const handleSave = async () => {
@@ -149,20 +152,27 @@ export default function Home() {
     }
 
     const name = teamName.trim() || "New Team";
+    const body = {
+      name,
+      pokemon: filled.map((s) => ({
+        pokedex_id: s.pokedex_id,
+        nickname: s.nickname,
+        level: s.level,
+        ability: s.ability,
+        moves: s.moves,
+      })),
+    };
+
     setSaving(true);
     setSaveStatus(null);
     try {
-      await createTeam({
-        name,
-        pokemon: filled.map((s) => ({
-          pokedex_id: s.pokedex_id,
-          nickname: s.nickname,
-          level: s.level,
-          ability: s.ability,
-          moves: s.moves,
-        })),
-      });
-      setSaveStatus({ type: "success", text: `Saved "${name}"!` });
+      if (loadedTeamId) {
+        await updateTeam(loadedTeamId, body);
+        setSaveStatus({ type: "success", text: `Updated "${name}"!` });
+      } else {
+        await createTeam(body);
+        setSaveStatus({ type: "success", text: `Saved "${name}"!` });
+      }
       setRefreshToken((t) => t + 1);
     } catch (err) {
       setSaveStatus({ type: "error", text: err.message });
@@ -186,6 +196,7 @@ export default function Home() {
         onDescriptionChange={setDescription}
         onCancel={resetTeam}
         onSave={handleSave}
+        isEditing={!!loadedTeamId}
       />
 
       {saveStatus && (

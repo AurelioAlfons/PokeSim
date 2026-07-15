@@ -12,14 +12,7 @@ from models.pokemon import Pokemon
 from services.pokedex_service import get_detail
 
 
-def create_team(name: str, pokemon: list) -> int:
-    conn = get_connection()
-    cur = conn.execute(
-        "INSERT INTO teams (name, created_at) VALUES (?, ?)",
-        (name, datetime.now(timezone.utc).isoformat()),
-    )
-    team_id = cur.lastrowid
-
+def _insert_members(conn, team_id: int, pokemon: list) -> None:
     for slot, mon in enumerate(pokemon):
         conn.execute(
             """INSERT INTO team_members
@@ -35,6 +28,17 @@ def create_team(name: str, pokemon: list) -> int:
                 json.dumps(mon["moves"]),
             ),
         )
+
+
+def create_team(name: str, pokemon: list) -> int:
+    conn = get_connection()
+    cur = conn.execute(
+        "INSERT INTO teams (name, created_at) VALUES (?, ?)",
+        (name, datetime.now(timezone.utc).isoformat()),
+    )
+    team_id = cur.lastrowid
+
+    _insert_members(conn, team_id, pokemon)
 
     conn.commit()
     conn.close()
@@ -86,6 +90,23 @@ def get_team(team_id: int) -> Optional[dict]:
         "name": team_row["name"],
         "pokemon": [_row_to_pokemon(row) for row in member_rows],
     }
+
+
+def update_team(team_id: int, name: str, pokemon: list) -> bool:
+    """Full replace: renames the team, wipes its members, re-inserts from scratch."""
+    conn = get_connection()
+    exists = conn.execute("SELECT id FROM teams WHERE id = ?", (team_id,)).fetchone()
+    if exists is None:
+        conn.close()
+        return False
+
+    conn.execute("UPDATE teams SET name = ? WHERE id = ?", (name, team_id))
+    conn.execute("DELETE FROM team_members WHERE team_id = ?", (team_id,))
+    _insert_members(conn, team_id, pokemon)
+
+    conn.commit()
+    conn.close()
+    return True
 
 
 def delete_team(team_id: int) -> bool:

@@ -1,11 +1,13 @@
 // src/components/SavedTeamsBar.jsx
 import React, { useEffect, useState } from "react";
 import { fetchTeams, fetchTeam, deleteTeam } from "../api/teams";
+import SavedTeamViewModal from "./SavedTeamViewModal";
 
 export default function SavedTeamsBar({ refreshToken, onLoad }) {
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState(null);
+  const [viewingId, setViewingId] = useState(null);
 
   const refresh = () => {
     setLoading(true);
@@ -61,6 +63,13 @@ export default function SavedTeamsBar({ refreshToken, onLoad }) {
               <div style={styles.chipMeta}>{t.pokemon_count} / 6</div>
               <div style={styles.chipActions}>
                 <button
+                  style={styles.viewBtn}
+                  disabled={busyId === t.id}
+                  onClick={() => setViewingId(t.id)}
+                >
+                  View
+                </button>
+                <button
                   style={styles.loadBtn}
                   disabled={busyId === t.id}
                   onClick={() => handleLoad(t.id)}
@@ -80,6 +89,8 @@ export default function SavedTeamsBar({ refreshToken, onLoad }) {
           ))}
         </div>
       )}
+
+      <SavedTeamViewModal teamId={viewingId} onClose={() => setViewingId(null)} />
     </div>
   );
 }
@@ -124,6 +135,17 @@ const styles = {
   chipActions: {
     display: "flex",
     gap: 6,
+  },
+  viewBtn: {
+    height: 28,
+    padding: "0 10px",
+    borderRadius: 6,
+    border: "2px solid #111",
+    background: "#fff",
+    color: "#111",
+    fontWeight: 800,
+    fontSize: 12,
+    cursor: "pointer",
   },
   loadBtn: {
     height: 28,

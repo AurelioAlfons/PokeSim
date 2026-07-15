@@ -30,6 +30,7 @@ export default function TeamHeader({
   onDescriptionChange = () => {},
   onCancel = () => {},
   onSave = () => {},
+  isEditing = false,
 }) {
   return (
     <div style={styles.wrap}>
@@ -67,7 +68,7 @@ export default function TeamHeader({
               <path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4ZM12 19a3 3 0 1 1 0-6 3 3 0 0 1 0 6ZM6 5h9v4H6V5Z" />
             </svg>
           </span>
-          Save Team
+          {isEditing ? "Update Team" : "Save Team"}
         </button>
 
         {/* CANCEL */}
