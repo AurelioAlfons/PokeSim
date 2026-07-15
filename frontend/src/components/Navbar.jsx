@@ -139,10 +139,13 @@ export default function Navbar() {
       gap: 14,
     },
 
-    userEmail: {
-      color: "#f7e733",
-      fontWeight: 700,
-      fontSize: 15,
+    avatar: {
+      width: 40,
+      height: 40,
+      borderRadius: "50%",
+      overflow: "hidden",
+      border: "2px solid #111",
+      flexShrink: 0,
     },
 
     divider: {
@@ -218,7 +221,14 @@ export default function Navbar() {
         {/* RIGHT */}
         {user ? (
           <div style={styles.rightGroup}>
-            <span style={styles.userEmail}>{user.email}</span>
+            {/* no pick-your-pokemon feature yet so pikachu's guarding the profile slot for now */}
+            <div style={styles.avatar}>
+              <img
+                src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
+                alt="profile"
+                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+              />
+            </div>
             <button
               style={styles.loginBtn}
               onClick={logout}

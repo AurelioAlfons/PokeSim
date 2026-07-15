@@ -31,7 +31,13 @@ export function AuthProvider({ children }) {
     loading,
     login: (email, password) =>
       supabase.auth.signInWithPassword({ email, password }),
-    register: (email, password) => supabase.auth.signUp({ email, password }),
+    // signup email needs to know where to send you back - copy resetPassword's trick below
+    register: (email, password) =>
+      supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: window.location.origin },
+      }),
     logout: () => supabase.auth.signOut(),
     resetPassword: (email) =>
       supabase.auth.resetPasswordForEmail(email, {
