@@ -3,6 +3,36 @@ import React, { useEffect, useState } from "react";
 import BattlePanel from "../components/BattlePanel";
 import PokemonSprite from "../components/PokemonSprite";
 
+const STATUS_STYLES = {
+  brn: { label: "BRN", bg: "#e4622d" },
+  par: { label: "PAR", bg: "#e4b800" },
+  slp: { label: "SLP", bg: "#8a7ac2" },
+  psn: { label: "PSN", bg: "#a33fc9" },
+};
+
+function StatusBadge({ status }) {
+  const s = STATUS_STYLES[status];
+  if (!s) return null;
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        marginLeft: 8,
+        padding: "2px 7px",
+        borderRadius: 5,
+        border: "2px solid rgba(0,0,0,0.85)",
+        background: s.bg,
+        color: "#fff",
+        fontSize: 11,
+        fontWeight: 900,
+        verticalAlign: "middle",
+      }}
+    >
+      {s.label}
+    </span>
+  );
+}
+
 export default function BattleArena() {
   const API_URL = process.env.REACT_APP_API_URL;
 
@@ -13,6 +43,12 @@ export default function BattleArena() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [panelMode, setPanelMode] = useState("main"); // main | moves | pokemon
   const [forceSwitch, setForceSwitch] = useState(false);
+  const [hitFlash, setHitFlash] = useState(null); // "player" | "enemy" | null
+
+  const flashHit = (side) => {
+    setHitFlash(side);
+    setTimeout(() => setHitFlash(null), 300);
+  };
 
   useEffect(() => {
     const start = async () => {
@@ -118,14 +154,37 @@ export default function BattleArena() {
       if (!res.ok) throw new Error("Move failed");
       const data = await res.json();
 
-      setPlayer(data.player);
-      setEnemy(data.enemy);
-      setTeam(data.team?.pokemon || []);
-      setActiveIndex(data.active_index ?? 0);
+      const logLines = data.log || [];
+      if (logLines.length) setLog((p) => [...logLines, ...p]);
 
-      if (data.log?.length) setLog((p) => [...data.log, ...p]);
+      const applyFinal = () => {
+        setPlayer(data.player);
+        setEnemy(data.enemy);
+        setTeam(data.team?.pokemon || []);
+        setActiveIndex(data.active_index ?? 0);
+      };
 
-      if (data.message === "Active Pokémon fainted.") {
+      // the backend resolves a whole turn (both attacks) in one call and
+      // only hands back final state - no "player hit, then enemy hit" event
+      // stream. log order tells us who went first, so we fake two beats:
+      // flash the first target, wait, then land the real state + 2nd flash.
+      // anything that's not exactly the classic 2-action turn (someone slept
+      // through it, status DoT ticked, etc) just lands in one go.
+      if (logLines.length === 2 && player && enemy) {
+        const firstHitsEnemy = logLines[0].startsWith(player.name);
+        flashHit(firstHitsEnemy ? "enemy" : "player");
+        await new Promise((r) => setTimeout(r, 500));
+        applyFinal();
+        flashHit(firstHitsEnemy ? "player" : "enemy");
+      } else {
+        const prevPlayerHp = player?.hp;
+        const prevEnemyHp = enemy?.hp;
+        applyFinal();
+        if (data.enemy && prevEnemyHp != null && data.enemy.hp < prevEnemyHp) flashHit("enemy");
+        if (data.player && prevPlayerHp != null && data.player.hp < prevPlayerHp) flashHit("player");
+      }
+
+      if (["Active Pokémon fainted.", "Player fainted."].includes(data.message)) {
         setForceSwitch(true);
         setPanelMode("pokemon");
         return;
@@ -177,6 +236,7 @@ export default function BattleArena() {
           >
             <div style={{ fontSize: 16 }}>
               {enemy ? `${enemy.name} Lv.${enemy.level}` : "Enemy..."}
+              {enemy && <StatusBadge status={enemy.status} />}
             </div>
 
             <div
@@ -193,6 +253,7 @@ export default function BattleArena() {
                   width: hpPct(enemy),
                   height: "100%",
                   background: "#e44848",
+                  transition: "width 400ms ease",
                 }}
               />
             </div>
@@ -204,6 +265,8 @@ export default function BattleArena() {
               alt={enemy?.name || "Enemy"}
               size={210}
               flip={true}
+              hit={hitFlash === "enemy"}
+              fainted={enemy?.hp <= 0}
             />
           </div>
 
@@ -223,6 +286,7 @@ export default function BattleArena() {
           >
             <div style={{ fontSize: 16 }}>
               {player ? `${player.name} Lv.${player.level}` : "Player..."}
+              {player && <StatusBadge status={player.status} />}
             </div>
 
             <div
@@ -239,6 +303,7 @@ export default function BattleArena() {
                   width: hpPct(player),
                   height: "100%",
                   background: "#25c05a",
+                  transition: "width 400ms ease",
                 }}
               />
             </div>
@@ -257,6 +322,7 @@ export default function BattleArena() {
                   width: expPct(player),
                   height: "100%",
                   background: "#4aa3ff",
+                  transition: "width 400ms ease",
                 }}
               />
             </div>
@@ -272,6 +338,8 @@ export default function BattleArena() {
               alt={player?.name || "Player"}
               size={220}
               flip={false}
+              hit={hitFlash === "player"}
+              fainted={player?.hp <= 0}
             />
           </div>
         </div>

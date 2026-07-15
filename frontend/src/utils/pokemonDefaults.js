@@ -28,6 +28,7 @@ export function buildDefaultSlotData(detail) {
       type: m.type,
       category: m.category,
       accuracy: m.accuracy,
+      ailment: m.ailment,
     }));
 
   return {

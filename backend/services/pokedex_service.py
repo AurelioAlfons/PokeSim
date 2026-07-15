@@ -53,12 +53,16 @@ def _level_up_moves(data: dict) -> list:
             continue
 
         move_data = get_move(entry["move"]["name"])
+        # meta can be missing on a handful of oddball moves - "none" matches
+        # PokeAPI's own convention for "doesn't inflict a status"
+        ailment = move_data.get("meta", {}).get("ailment", {}).get("name", "none")
         moves.append({
             "name": move_data["name"].replace("-", " ").title(),
             "power": move_data["power"] or 0,
             "type": move_data["type"]["name"],
             "category": move_data["damage_class"]["name"],  # physical/special/status
             "accuracy": move_data["accuracy"],  # None means "never misses"
+            "ailment": ailment,  # e.g. "burn", "paralysis", "sleep", "poison", "none"
             "level_learned_at": learn["level_learned_at"],
         })
 

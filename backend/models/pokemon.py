@@ -40,6 +40,10 @@ class Pokemon:
         # moves: list of {"name", "power", "type", "category": physical/special/status/heal, "accuracy"}
         self.moves = moves
 
+        # status condition - "brn"/"par"/"slp"/"psn" or None, cleared on heal/reset
+        self.status = None
+        self.status_turns = 0
+
         # sprite path — this is what React will use
         self.sprite = f"/assets/SVG/{self.id}.svg"
 
@@ -63,6 +67,7 @@ class Pokemon:
             "level": self.level,
             "types": self.types,
             "ability": self.ability,
+            "status": self.status,
             "hp": self.hp,
             "max_hp": self.max_hp,
             "attack": self.attack,

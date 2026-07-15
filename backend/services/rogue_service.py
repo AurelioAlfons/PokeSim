@@ -15,11 +15,13 @@ def next_alive(team: list[Pokemon]) -> Optional[Pokemon]:
 
 
 def between_fight_heal(team: list[Pokemon], percent: float = 0.15) -> None:
-    """Small heal between fights (used by rogue mode)."""
+    """Small heal between fights (used by rogue mode) - also clears status, doesn't carry between waves."""
     for p in team:
         if p.hp > 0:
             heal = max(1, int(p.max_hp * percent))
             p.hp = min(p.max_hp, p.hp + heal)
+            p.status = None
+            p.status_turns = 0
 
 
 def lowest_alive_level(team: list[Pokemon]) -> int:

@@ -95,6 +95,7 @@ export default function PokemonDetailModal({ open, pokedexId, initial, onConfirm
         type: m.type,
         category: m.category,
         accuracy: m.accuracy,
+        ailment: m.ailment,
       })),
     });
   };
