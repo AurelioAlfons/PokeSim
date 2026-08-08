@@ -1,11 +1,10 @@
-# ⚡ PokeSim – Gen 4 Pokémon Battle Simulator
+# <img src="assets/SVG/445.svg" width="70" /> PokeSim – Gen 4 Pokémon Battle Simulator
+
 
 <!-- Choose ONE: Banner OR Screenshots -->
 
 <!-- Option A: Banner -->
-<p align="center">
-  <img src="./assets/banner.png" alt="PokeSim Banner" width="100%" />
-</p>
+<img width="1838" height="947" alt="image" src="https://github.com/user-attachments/assets/88089e71-2fb2-45f4-8f10-db74a6bfbad9" /># 
 
 <!-- Option B: Screenshots
 <p align="center">
@@ -26,7 +25,7 @@
 
 ---
 
-## 🛠 Tech Stack
+## <img src="assets/SVG/392.svg" width="70" /> Tech Stack
 
 <p align="center">
   <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" />
@@ -46,7 +45,7 @@
 
 ---
 
-## 📖 About
+## <img src="assets/SVG/389.svg" width="70" /> About
 
 PokeSim started as a small project to learn how a frontend and backend communicate through an API.
 
@@ -56,7 +55,7 @@ Generation 4 is currently the only supported generation.
 
 ---
 
-## ✨ Core Features
+## <img src="assets/SVG/395.svg" width="70" /> Core Features
 
 ### 📖 Pokédex & Team Builder
 
@@ -90,7 +89,7 @@ Generation 4 is currently the only supported generation.
 
 ---
 
-## ⚙️ How It Works
+## <img src="assets/SVG/466.svg" width="70" /> How It Works
 
 ```text
 React Frontend
@@ -114,7 +113,7 @@ Supabase handles authentication and account-based saved teams.
 
 ---
 
-## 📌 Project Status
+## <img src="assets/SVG/398.svg" width="70" /> Project Status
 
 - ✅ Full Gen 4 Pokédex
 - ✅ Drag-and-drop Team Builder
@@ -129,7 +128,7 @@ Supabase handles authentication and account-based saved teams.
 
 ---
 
-## 🔮 What's Next
+## <img src="assets/SVG/493.svg" width="70" /> What's Next
 
 - Expand support to more Pokémon generations
 - Add more move effects
